@@ -1,0 +1,226 @@
+%gji_extra_guide.tex
+% \documentclass{gji}
+\documentclass[extra,mreferee]{gji}
+\usepackage{times, color}
+% \usepackage{mathrsfs,amsmath}
+% \documentclass[a4paper, 11pt]{article}
+% \usepackage{fullpage}
+\usepackage[pdftex]{graphicx}
+\usepackage{mathrsfs, amsmath, amsfonts,xspace}
+\usepackage[pagewise, mathlines]{lineno}
+
+% \usepackage{framed, color, fancybox}
+\author[Seogi Kang and Douglas W. Oldenburg]
+   {Seogi Kang and Douglas W. Oldenburg \\
+    Department of Earth, Ocean and Atmospheric Sciences,
+    University of British Columbia,
+    B.C. \emph{V6T 1Z4}, Canada
+  }
+
+\title{Simulations of induced polarization effects in time domain electromagnetic data}
+
+
+%% =============================================================================
+%% My eqs
+%% =============================================================================
+\newcommand{\SimPEG}{\textsc{SimPEG}\xspace}
+\renewcommand{\div}{\nabla\cdot}
+\newcommand{\grad}{\vec \nabla}
+\newcommand{\curl}{{\vec \nabla}\times}
+\newcommand {\J}{{\vec J}}
+\renewcommand{\H}{{\vec H}}
+\newcommand {\E}{{\vec E}}
+\newcommand{\siginf}{\sigma_\infty}
+\newcommand{\dsig}{\triangle\sigma}
+\newcommand{\dcurl}{{\mathbf C}}
+\newcommand{\dgrad}{{\mathbf G}}
+\newcommand{\Acf}{{\mathbf A_c^f}}
+\newcommand{\Ace}{{\mathbf A_c^e}}
+\renewcommand{\S}{{\mathbf \Sigma}}
+\newcommand{\St}{{\mathbf \Sigma_\tau}}
+\newcommand{\T}{{\mathbf T}}
+\newcommand{\Tt}{{\mathbf T_\tau}}
+\newcommand{\diag}{\mathbf{diag}}
+\newcommand{\M}{{\mathbf M}}
+\newcommand{\MfMui}{{\M^f_{\mu^{-1}}}}
+\newcommand{\MfMuoi}{{\M^f_{\mu_0^{-1}}}}
+\newcommand{\dMfMuI}{{d_m (\M^f_{\mu^{-1}})^{-1}}}
+\newcommand{\dMfMuoI}{{d_m (\M^f_{\mu_0^{-1}})^{-1}}}
+\newcommand{\MeSig}{{\M^e_\sigma}}
+\newcommand{\MeSigInf}{{\M^e_{\sigma_\infty}}}
+\newcommand{\MeSigInfEtab}{{\M^e_{\sigma_\infty \bar{\eta}}}}
+\newcommand{\MeSigInfEtat}{{\M^e_{\sigma_\infty \peta}}}
+\newcommand{\MedSig}{{\M^e_{\triangle\sigma}}}
+\newcommand{\MeSigO}{{\M^e_{\sigma_0}}}
+\newcommand{\Me}{{\M^e}}
+\newcommand{\Js}{\mathbf{J}^s}
+\newcommand{\Mes}[1]{{\M^e_{#1}}}
+\newcommand{\Mee}{{\M^e_e}}
+\newcommand{\Mej}{{\M^e_j}}
+\newcommand{\BigO}[1]{\mathcal{O}\bigl(#1\bigr)}
+\newcommand{\bE}{\mathbf{E}}
+\newcommand{\bEp}{\mathbf{E}^p}
+\newcommand{\bB}{\mathbf{B}}
+\newcommand{\bBp}{\mathbf{B}^p}
+\newcommand{\bEs}{\mathbf{E}^s}
+\newcommand{\bBs}{\mathbf{B}^s}
+\newcommand{\bH}{\mathbf{H}}
+\newcommand{\B}{\vec{B}}
+\newcommand{\D}{\vec{D}}
+\renewcommand{\H}{\vec{H}}
+\newcommand{\s}{\vec{s}}
+\newcommand{\bfJ}{\bf{J}}
+\newcommand{\vecm}{\vec m}
+\renewcommand{\Re}{\mathsf{Re}}
+\renewcommand{\Im}{\mathsf{Im}}
+\renewcommand {\j}  { {\vec j} }
+\newcommand {\h}  { {\vec h} }
+\renewcommand {\b}  { {\vec b} }
+\newcommand {\e}  { {\vec e} }
+\renewcommand {\d}  { {\vec d} }
+\renewcommand {\u}  { {\vec u} }
+
+\renewcommand {\dj}  { {\mathbf{j} } }
+\renewcommand {\dh}  { {\mathbf{h} } }
+\newcommand {\db}  { {\mathbf{b} } }
+\newcommand {\de}  { {\mathbf{e} } }
+
+\newcommand{\vol}{\mathbf{v}}
+\newcommand{\I}{\vec{I}}
+\newcommand{\A}{\mathbf{A}}
+\newcommand{\bI}{\mathbf{I}}
+\newcommand{\bus}{\mathbf{u}^s}
+\newcommand{\brhss}{\mathbf{rhs}_s}
+\newcommand{\bup}{\mathbf{u}^p}
+\newcommand{\brhs}{\mathbf{rhs}}
+%%-------------------------------
+\newcommand{\bon}{b^{on}(t)}
+\newcommand{\bp}{b^{p}}
+\newcommand{\dbondt}{\frac{db^{on}(t)}{dt}}
+\newcommand{\dfdt}{\frac{df(t)}{dt}}
+\newcommand{\dfdtdsiginf}{\frac{\partial\frac{df(t)}{dt}}{\partial\siginf}}
+\newcommand{\dfdsiginf}{\frac{\partial f(t)}{\partial\siginf}}
+\newcommand{\dbgdsiginf}{\frac{\partial b^{Impulse}(t)}{\partial\siginf}}
+\newcommand{\digint}{\frac{2}{\pi}\int_0^{\infty}}
+\newcommand{\Gbiot}{\mathbf{G}_{Biot}}
+%%-------------------------------
+\newcommand{\peta}{\tilde{\eta}}
+\newcommand{\eFmax}{\e^{\ F}_{max}}
+\newcommand{\eref}{\e^{\ ref}}
+\newcommand{\jref}{\j^{\ ref}}
+\newcommand{\dip}{d^{IP}}
+\newcommand{\sigpert}{\delta\sigma}
+\newcommand{\bzip}{b_z^{IP}}
+\newcommand{\dbzdtip}{\frac{\partial b_z^{IP}}{\partial t}}
+
+
+\begin{document}
+
+\label{firstpage}
+
+\maketitle
+
+% Key words:
+% Geomagnetic induction,
+% Electromagnetic theory,
+% Electrical properties,
+% Numerical approximations and analyses
+
+\begin{summary}
+XXX
+\end{summary}
+
+%%=====================================================================
+%% Section. Intro.
+%%=====================================================================
+
+% \linenumbers
+\section{Formulation}
+Complex conductivity model in Laplace domain can be expressed as
+\begin{equation}
+  \sigma (s) = \siginf + \dsig (s)
+\end{equation}
+where $s=\imath \omega$ is the Laplace transform variable. Inverse Laplace transform of $\sigma(s)$ yields:
+\begin{equation}
+  \mathcal{L}^{-1}[\sigma(s)] = \sigma(t) = \siginf \delta (t) + \dsig (t)
+  \label{eq:sigma_time}
+\end{equation}
+where  $\delta(t)$ is a Dirac-Delta function and $\dsig(t) = \mathcal{L}^{-1}[\dsig(s)]$.
+Maxwell's equations can be written as
+\begin{equation}
+  \curl \e = -\frac{\partial \b}{\partial t} \\
+  \label{eq:faraday}
+\end{equation}
+\begin{equation}
+  \curl \mu^{-1} \b - \j = \j_s \\
+  \label{eq:ampere}
+\end{equation}
+Considering a time-dependent conductivity, Ohm's Law can be written as
+\begin{equation}
+  \j = \int_0^t \sigma(t-u) \e (u) du
+  \label{eq:ohmslaw}
+\end{equation}
+And substituting Eq. \ref{eq:sigma_time} yields
+\begin{equation}
+  \j = \siginf \e + \int_0^t \dsig(t-u) \e (u) du
+  \label{eq:ohmslaw_two}
+\end{equation}
+Using backward euler method, we respectively discretize Eqs. \ref{eq:faraday} and \ref{eq:ampere} in time:
+\begin{equation}
+  \curl \e^{\ (n)} = -\frac{\b^{(n)}-\b^{(n-1)}}{\triangle t^{(n)}}
+  \label{eq:faraday_time}
+\end{equation}
+\begin{equation}
+  \curl \mu^{-1} \b^{(n)} - \j^{(n)} = \j_s^{(n)} \\
+  \label{eq:ampere_time}
+\end{equation}
+where $\triangle t^{(n)} = t^{(n)}- t^{(n-1)}$.
+To discretize integration part in Eq. \ref{eq:ohmslaw_two}, we use trapezoidal rule:
+\begin{equation}
+  \int_{t^{(k-1)}}^{t^{(k)}} \dsig(t-u) \e (u) du
+  = \frac{\triangle t^{(k)}}{2} \Big(\dsig (t^{(n)} - t^{(k-1)}) \e^{\ (k-1)} + \dsig (t^{(n)} - t^{(k)}) \e^{\ (k)} \Big)
+\end{equation}
+Hence the Ohm's Law shown in Eq. \ref{eq:ohmslaw_two} can be discretized as
+\begin{equation}
+  \j^{(n)} = \siginf \e^{\ (n)} +
+  \sum_{k=1}^{n} \frac{\triangle t^{(k)}}{2} \Big(\dsig (t^{(n)} - t^{(k-1)}) \e^{\ (k-1)} + \dsig (t^{(n)} - t^{(k)}) \e^{\ (k)} \Big)
+\end{equation}
+This can be rewritten as
+\begin{equation}
+  \j^{(n)} = \Big(\siginf + \gamma (\triangle t^{(n)})\Big)\e^{\ (n)} + \j_{pol}^{(n-1)}
+  \label{eq:ohmslaw_time}
+\end{equation}
+where the polarization current, $\j_{pol}^{(n-1)}$ is
+\begin{align}
+  \j_{pol}^{(n-1)} = \sum_{k=1}^{n-1} \frac{\triangle t^{(k)}}{2} \Big(\dsig (t^{(n)} - t^{(k-1)}) \e^{\ (k-1)} + \dsig (t^{(n)} - t^{(k)}) \e^{\ (k)} \Big) \nonumber \\
+  +  \kappa(\triangle t^{(n)}) \e^{\ (n-1)}
+\end{align}
+Using mimetic finite volume approach, we correspondingly discretize Eqs. \ref{eq:faraday_time}, \ref{eq:ampere_time}, and \ref{eq:ohmslaw_time}
+\begin{equation}
+  \dcurl \de^{\ (n)} = -\frac{\db^{(n)}-\db^{(n-1)}}{\triangle t^{(n)}}
+    \label{eq:faraday_discrete}
+\end{equation}
+\begin{equation}
+  \dcurl \MfMui \db^{(n)} - \Me \dj^{(n)} = \mathbf{s}_e^{(n)} \\
+  \label{eq:ampere_discrete}
+\end{equation}
+\begin{equation}
+  \Me\dj^{(n)} = \Mes{A}^{(n)}\de^{\ (n)} + \dj_{pol}^{(n-1)}
+  \label{eq:ohmslaw_discrete}
+\end{equation}
+where
+\begin{align}
+  \dj_{pol}^{(n-1)} = \sum_{k=1}^{n-1} \frac{\triangle t^{(k)}}{2} \Big(\Mes{\dsig (n, k-1)} \e^{\ (k-1)} + \Mes{\dsig (n, k)} \de^{\ (k)} \Big) \nonumber \\
+  +  \Mes{\kappa} \de^{\ (n-1)}
+\end{align}
+We can rearrange above equations to solve either $\de$ or $\db$. First consider solving $\de$ hence we remove $\db$.
+\begin{align}
+  \Big(\dcurl^T \MfMui \dcurl + \frac{1}{\triangle t^{(n)}} \Mes{A}^{(n)}\Big) \de^{(n)} \nonumber \\
+  = - \frac{1}{\triangle t^{(n)}} (\mathbf{s}_e^{(n)}-\mathbf{s}_e^{(n-1)})
+    + \frac{1}{\triangle t^{(n)}} \Me \dj^{(n-1)} - \frac{1}{\triangle t^{(n)}} \dj_{pol}^{(n-1)}
+\end{align}
+
+
+
+\end{document}
+
