@@ -1,5 +1,7 @@
-from SimPEG import Problem, Utils, Maps, Props, Mesh, Tests, np, sp
+from SimPEG import Problem, Utils, Maps, Props, Mesh, Tests
 from SimPEG.Survey import BaseSurvey
+import numpy as np
+
 
 def getTau(taumin, taumax, ntau):
     tau = np.logspace(np.log10(taumin), np.log10(taumax), ntau)
@@ -98,10 +100,10 @@ class DebyeDecProblem(Problem.BaseProblem):
     def get_petaImpulse(self, time, m):
         etas = m[1:]
         taus = self.tau
-        b = 1. / ((1.-etas)*taus)
-        a = etas*b
+        b = -1. / ((1.-etas)*taus)
+        a = -etas*b
         t_temp = np.atleast_2d(time).T
-        temp = np.exp(-np.dot(t_temp, np.atleast_2d(b)))
+        temp = np.exp(np.dot(t_temp, np.atleast_2d(b)))
         out = np.dot(temp, a)
 
         return out
@@ -109,10 +111,20 @@ class DebyeDecProblem(Problem.BaseProblem):
     def get_petaStepon(self, time, m):
         etas = m[1:]
         taus = self.tau
-        b = 1. / ((1.-etas)*taus)
+        b = -1. / ((1.-etas)*taus)
         t_temp = np.atleast_2d(time).T
-        temp = np.exp(-np.dot(t_temp, np.atleast_2d(b)))
+        temp = np.exp(np.dot(t_temp, np.atleast_2d(b)))
         out = np.dot(temp, etas)
+        return out
+
+    def get_Expb(self, time, m):
+        etas = m[1:]
+        taus = self.tau
+        b = -1. / ((1.-etas)*taus)
+        e = etas / b
+        t_temp = np.atleast_2d(time).T
+        temp = 1.-np.exp(np.dot(t_temp, np.atleast_2d(b)))
+        out = np.dot(temp, e)
         return out
 
     def dsig_dm(self, v, adjoint=False):
