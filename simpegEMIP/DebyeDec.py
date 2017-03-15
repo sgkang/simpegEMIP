@@ -8,8 +8,8 @@ def getTau(taumin, taumax, ntau):
     mesh = Mesh.TensorMesh([np.diff(tau)], x0=[tau[0]])
     return mesh
 
+class DebyeDecSurvey(BaseSurvey):    
 
-class DebyeDecSurvey(BaseSurvey):
     def eval(self, f):
         """
             f: complex array
@@ -68,6 +68,7 @@ class DebyeDecProblem(Problem.BaseProblem):
     frequency = None
     tau = None
     f = None
+    InvertOnlyEta = False
 
     def __init__(self, mesh, **kwargs):
         Problem.BaseProblem.__init__(self, mesh, **kwargs)
@@ -75,6 +76,9 @@ class DebyeDecProblem(Problem.BaseProblem):
         self.nfreq = self.frequency.size
         self.tau = self.mesh.gridN
         self.ntau = self.mesh.nN
+        if self.sigmaInfMap == None:
+            self.InvertOnlyEta = True
+            print ("Assume sigmaInf is known")
 
     @property
     def X(self):
@@ -98,7 +102,7 @@ class DebyeDecProblem(Problem.BaseProblem):
         return f
 
     def get_petaImpulse(self, time, m):
-        etas = m[1:]
+        etas = m
         taus = self.tau
         b = -1. / ((1.-etas)*taus)
         a = -etas*b
@@ -109,7 +113,7 @@ class DebyeDecProblem(Problem.BaseProblem):
         return out
 
     def get_petaStepon(self, time, m):
-        etas = m[1:]
+        etas = m
         taus = self.tau
         b = -1. / ((1.-etas)*taus)
         t_temp = np.atleast_2d(time).T
@@ -118,7 +122,7 @@ class DebyeDecProblem(Problem.BaseProblem):
         return out
 
     def get_Expb(self, time, m):
-        etas = m[1:]
+        etas = m
         taus = self.tau
         b = -1. / ((1.-etas)*taus)
         e = etas / b
@@ -128,16 +132,26 @@ class DebyeDecProblem(Problem.BaseProblem):
         return out
 
     def dsig_dm(self, v, adjoint=False):
-        if not adjoint:
-            dsigmaInf_dm_v = self.sigmaInfDeriv*v
+
+        if not adjoint:            
+
             deta_dm_v = self.etaDeriv*v
-            return self.dsig_dsigmaInf(dsigmaInf_dm_v) + self.dsig_deta(deta_dm_v)
+            if self.InvertOnlyEta:
+                return self.dsig_deta(deta_dm_v)
+            else:
+                dsigmaInf_dm_v = self.sigmaInfDeriv*v
+                return self.dsig_dsigmaInf(dsigmaInf_dm_v) + self.dsig_deta(deta_dm_v)
 
         elif adjoint:
-            dsig_dsigmaInfT_v = self.dsig_dsigmaInf(v, adjoint=adjoint)
+
             dsig_detaT_v = self.dsig_deta(v, adjoint=adjoint)
-            dsig_dm_v = self.sigmaInfDeriv.T * dsig_dsigmaInfT_v
-            dsig_dm_v += self.etaDeriv.T * dsig_detaT_v
+            dsig_dm_v = self.etaDeriv.T * dsig_detaT_v
+            
+            if not self.InvertOnlyEta:                
+            
+                dsig_dsigmaInfT_v = self.dsig_dsigmaInf(v, adjoint=adjoint)            
+                dsig_dm_v += self.sigmaInfDeriv.T * dsig_dsigmaInfT_v
+            
             return dsig_dm_v
 
     def dsig_deta(self, v, adjoint=False):
