@@ -7,7 +7,7 @@ from SimPEG.EM.TDEM.FieldsTDEM import (
     FieldsTDEM, Fields3D_b, Fields3D_e, Fields3D_h, Fields3D_j, Fields_Derivs
 )
 from simpegEMIP.Base import BaseEMIPProblem
-from simpegEMIP import 
+from simpegEMIP import
 
 class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
     """
@@ -21,15 +21,15 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
     def __init__(self, mesh, **kwargs):
         BaseEMIPProblem.__init__(self, mesh)
         Debye = []
-    
+
     def getDebye():
 
         return
-        
+
     def MeA(dt):
         gamma = getGamma(dt)
         val = sigmaInf + gamma
-        return mesh.getEdgeInnerProduct(val)      
+        return mesh.getEdgeInnerProduct(val)
 
     def fields(self, m):
         """
@@ -173,7 +173,7 @@ class Problem3D_e(BaseTDEMIPProblem):
         dt = self.timeSteps[tInd]
         C = self.mesh.edgeCurl
         MfMui = self.MfMui
-        
+
         return C.T * ( MfMui * C ) + 1./dt * MeA(dt)
 
     def getAdiagDeriv(self, tInd, u, v, adjoint=False):
@@ -234,5 +234,5 @@ if __name__ == '__main__':
     cs, ncx, ncz, npad = 5., 25, 15, 15
     hx = [(cs,ncx), (cs,npad,1.3)]
     hz = [(cs,npad,-1.3), (cs,ncz), (cs,npad,1.3)]
-    mesh = Mesh.CylMesh([hx,1,hz], '00C')    
+    mesh = Mesh.CylMesh([hx,1,hz], '00C')
     prob = BaseTDEMIPProblem(mesh)

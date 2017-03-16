@@ -18,6 +18,7 @@ from SimPEG.EM.Base import BaseEMProblem
 class BaseEMIPProblem(BaseEMProblem):
 
     def __init__(self, mesh, **kwargs):
+
         Problem.BaseProblem.__init__(self, mesh, **kwargs)
 
         sigmaInf, sigmaInfMap, sigmaInfDeriv = Props.Invertible(
@@ -37,18 +38,18 @@ class BaseEMIPProblem(BaseEMProblem):
         mui = Props.PhysicalProperty(
             "Inverse Magnetic Permeability (m/H)"
         )
-        
+
         eta, etaMap, etaDeriv = Props.Invertible(
             "Cole-Cole chargeability (V/V)"
-        )        
+        )
 
         tau, tauMap, tauDeriv = Props.Invertible(
             "Cole-Cole time constant (s)"
-        )        
+        )
 
         c, cMap, cDeriv = Props.Invertible(
             "Cole-Cole frequency dependency"
-        )        
+        )
 
     @property
     def deleteTheseOnModelUpdate(self):

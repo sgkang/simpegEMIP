@@ -2,52 +2,6 @@ from SimPEG import Problem, Utils, Maps, Props, Mesh, Tests
 from SimPEG.Survey import BaseSurvey
 import numpy as np
 
-
-def getTau(taumin, taumax, ntau):
-    tau = np.logspace(np.log10(taumin), np.log10(taumax), ntau)
-    mesh = Mesh.TensorMesh([np.diff(tau)], x0=[tau[0]])
-    return mesh
-
-class DebyeDecSurvey(BaseSurvey):    
-
-    def eval(self, f):
-        """
-            f: complex array
-
-            Set data as log(|f|) and its phase
-
-            .. math::
-
-                f=fexp(\imath \psi)
-                log(f) = log(|f|) + 1\imath \psi
-
-        """
-        return np.r_[np.log(f).real, np.log(f).imag]
-
-    def evalDeriv_logf_v(self, v, f, adjoint=False):
-        if not adjoint:
-            return (1./f*v).real
-        elif adjoint:
-            return (1./f).conj()*v
-
-    def evalDeriv_psi_v(self, v, f, adjoint=False):
-        if not adjoint:
-            return (np.zeros(f.size) * v).real
-        elif adjoint:
-            return np.zeros(f.size) * v
-
-    def evalDeriv(self, v, f, adjoint=False):
-        if not adjoint:
-            return np.r_[self.evalDeriv_logf_v(v, f, adjoint=adjoint), self.evalDeriv_psi_v(v, f, adjoint=adjoint)]
-        elif adjoint:
-            v = v.reshape((self.prob.nfreq, 2), order="F")
-            return self.evalDeriv_logf_v(v[:,0], f, adjoint=adjoint) + self.evalDeriv_psi_v(v[:,1], f, adjoint=adjoint)
-
-    @property
-    def nD(self):
-        return self.prob.nfreq*2
-
-
 class DebyeDecProblem(Problem.BaseProblem):
 
     sigmaInf, sigmaInfMap, sigmaInfDeriv = Props.Invertible(
@@ -133,7 +87,7 @@ class DebyeDecProblem(Problem.BaseProblem):
 
     def dsig_dm(self, v, adjoint=False):
 
-        if not adjoint:            
+        if not adjoint:
 
             deta_dm_v = self.etaDeriv*v
             if self.InvertOnlyEta:
@@ -146,12 +100,12 @@ class DebyeDecProblem(Problem.BaseProblem):
 
             dsig_detaT_v = self.dsig_deta(v, adjoint=adjoint)
             dsig_dm_v = self.etaDeriv.T * dsig_detaT_v
-            
-            if not self.InvertOnlyEta:                
-            
-                dsig_dsigmaInfT_v = self.dsig_dsigmaInf(v, adjoint=adjoint)            
+
+            if not self.InvertOnlyEta:
+
+                dsig_dsigmaInfT_v = self.dsig_dsigmaInf(v, adjoint=adjoint)
                 dsig_dm_v += self.sigmaInfDeriv.T * dsig_dsigmaInfT_v
-            
+
             return dsig_dm_v
 
     def dsig_deta(self, v, adjoint=False):
@@ -198,3 +152,48 @@ class DebyeDecProblem(Problem.BaseProblem):
         dP_dsigT_v = self.survey.evalDeriv(v, f, adjoint=True)
         Jtv = self.dsig_dm(dP_dsigT_v, adjoint=True)
         return Jtv
+
+
+def getTau(taumin, taumax, ntau):
+    tau = np.logspace(np.log10(taumin), np.log10(taumax), ntau)
+    mesh = Mesh.TensorMesh([np.diff(tau)], x0=[tau[0]])
+    return mesh
+
+class DebyeDecSurvey(BaseSurvey):
+
+    def eval(self, f):
+        """
+            f: complex array
+
+            Set data as log(|f|) and its phase
+
+            .. math::
+
+                f=fexp(\imath \psi)
+                log(f) = log(|f|) + 1\imath \psi
+
+        """
+        return np.r_[np.log(f).real, np.log(f).imag]
+
+    def evalDeriv_logf_v(self, v, f, adjoint=False):
+        if not adjoint:
+            return (1./f*v).real
+        elif adjoint:
+            return (1./f).conj()*v
+
+    def evalDeriv_psi_v(self, v, f, adjoint=False):
+        if not adjoint:
+            return (np.zeros(f.size) * v).real
+        elif adjoint:
+            return np.zeros(f.size) * v
+
+    def evalDeriv(self, v, f, adjoint=False):
+        if not adjoint:
+            return np.r_[self.evalDeriv_logf_v(v, f, adjoint=adjoint), self.evalDeriv_psi_v(v, f, adjoint=adjoint)]
+        elif adjoint:
+            v = v.reshape((self.prob.nfreq, 2), order="F")
+            return self.evalDeriv_logf_v(v[:,0], f, adjoint=adjoint) + self.evalDeriv_psi_v(v[:,1], f, adjoint=adjoint)
+
+    @property
+    def nD(self):
+        return self.prob.nfreq*2
