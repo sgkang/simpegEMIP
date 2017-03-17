@@ -4,28 +4,28 @@ def SliceArray(mesh, var, imageType='CC', normal='z', index=0):
     assert normal in 'xyz', 'normal must be x, y, or z'
     axes = [p for p in 'xyz' if p not in normal.lower()]
     I = mesh.r(var,'CC','CC','M')
-    if normal is 'x': 
+    if normal is 'x':
         I = I[index,:,:]
         ind1 = 1; ind2=2
-    if normal is 'y': 
+    if normal is 'y':
         I = I[:,index,:]
         ind1 = 0; ind2=2
-    if normal is 'z': 
+    if normal is 'z':
         I = I[:,:,index]
         ind1 = 0; ind2=1
     X1 = mesh.r(mesh.gridCC[:,ind1],'CC','CC','M')
-    X2 = mesh.r(mesh.gridCC[:,ind2],'CC','CC','M')            
+    X2 = mesh.r(mesh.gridCC[:,ind2],'CC','CC','M')
 
-    if normal is 'x': 
+    if normal is 'x':
         X1 = X1[index,:,:]
         X2 = X2[index,:,:]
-    if normal is 'y': 
+    if normal is 'y':
         X1 = X1[:,index,:]
-        X2 = X2[:,index,:]        
-    if normal is 'z': 
+        X2 = X2[:,index,:]
+    if normal is 'z':
         X1 = X1[:,:,index]
         X2 = X2[:,:,index]
-    
+
     return X1.T, X2.T, I.T
 
 def Rectangle2D(xc, xlen, ylen):
@@ -57,4 +57,4 @@ if __name__ == '__main__':
     test = Rectangle2D(np.r_[0, 0], 10., 10.)
     plt.plot(test[:,0],test[:,1], 'k--')
     plt.show()
-    
+

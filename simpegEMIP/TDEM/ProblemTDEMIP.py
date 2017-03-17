@@ -8,6 +8,7 @@ from SimPEG.EM.TDEM import FieldsTDEM
 from simpegEMIP.Base import BaseEMIPProblem
 import time
 
+
 class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
     """
     We start with the first order form of Maxwell's equations, eliminate and
@@ -131,6 +132,23 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
 
         return ifields
 
+    def getpetaI(self, time):
+        m = self.eta*self.c/(self.tau**self.c)
+        peta = m*time**(self.c-1.)*np.exp(-(time/self.tau)**self.c)
+        return peta
+
+    def getGamma(self, dt):
+        m = self.eta*self.c/(self.tau**self.c)
+        gamma = m / (self.c*(self.c+1.)) * (dt) ** self.c
+        - m / (2*self.c*(2*self.c+1.) * self.tau**self.c) * (dt) ** (2*self.c)
+        return - self.sigmaInf * gamma
+
+    def getKappa(self, dt):
+        m = self.eta*self.c/(self.tau**self.c)
+        kappa = m / (self.c+1.) * (dt) ** self.c
+        - m / ((2*self.c+1.)*self.tau ** self.c) * (dt) ** (2*self.c)
+        return - self.sigmaInf * kappa
+
 # ------------------------------- Problem3D_e ------------------------------- #
 class Problem3D_e(BaseTDEMIPProblem):
     """
@@ -162,26 +180,6 @@ class Problem3D_e(BaseTDEMIPProblem):
 
     def __init__(self, mesh, **kwargs):
         BaseTDEMIPProblem.__init__(self, mesh, **kwargs)
-
-    # TODO: move this to Baseclass
-    def getpetaI(self, time):
-        m = self.eta*self.c/(self.tau**self.c)
-        peta = m*time**(self.c-1.)*np.exp(-(time/self.tau)**self.c)
-        return peta
-
-    # TODO: move this to Baseclass
-    def getGamma(self, dt):
-        m = self.eta*self.c/(self.tau**self.c)
-        gamma = m / (self.c*(self.c+1.)) * (dt) ** self.c
-        - m / (2*self.c*(2*self.c+1.) * self.tau**self.c) * (dt) ** (2*self.c)
-        return - self.sigmaInf * gamma
-
-    # TODO: move this to Baseclass
-    def getKappa(self, dt):
-        m = self.eta*self.c/(self.tau**self.c)
-        kappa = m / (self.c+1.) * (dt) ** self.c
-        - m / ((2*self.c+1.)*self.tau ** self.c) * (dt) ** (2*self.c)
-        return - self.sigmaInf * kappa
 
     def getJpol(self, tInd, F):
         """
@@ -251,7 +249,7 @@ class Problem3D_e(BaseTDEMIPProblem):
 if __name__ == '__main__':
     from SimPEG import Mesh
     cs, ncx, ncz, npad = 5., 25, 15, 15
-    hx = [(cs,ncx), (cs,npad,1.3)]
-    hz = [(cs,npad,-1.3), (cs,ncz), (cs,npad,1.3)]
-    mesh = Mesh.CylMesh([hx,1,hz], '00C')
+    hx = [(cs, ncx), (cs, npad, 1.3)]
+    hz = [(cs, npad, -1.3), (cs, ncz), (cs, npad, 1.3)]
+    mesh = Mesh.CylMesh([hx, 1, hz], '00C')
     prob = BaseTDEMIPProblem(mesh)
