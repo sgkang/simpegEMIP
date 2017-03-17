@@ -3,3 +3,6 @@
 *.fls
 *.latexmk
 *.aux
+
+*.sublime-project
+*.sublime-workspace
