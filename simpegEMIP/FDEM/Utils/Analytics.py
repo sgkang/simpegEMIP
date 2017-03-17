@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.constants import mu_0, pi, epsilon_0
-from simpegEMIP.FD.Utils import ColeColePelton
+from simpegEMIP.FDEM.Utils import ColeColePelton
 
 
 def hzAnalyticDipoleF(r, f, sigma, option="secondary"):

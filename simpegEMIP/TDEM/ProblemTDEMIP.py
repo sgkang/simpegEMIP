@@ -1,13 +1,12 @@
 from __future__ import division, print_function
 import scipy.sparse as sp
 import numpy as np
-from SimPEG import Problem, Utils, Solver as SimpegSolver
+from SimPEG import Props, Problem, Utils, Solver as SimpegSolver
 from SimPEG.EM.TDEM.SurveyTDEM import Survey as SurveyTDEM
-from SimPEG.EM.TDEM.FieldsTDEM import (
-    FieldsTDEM, Fields3D_b, Fields3D_e, Fields3D_h, Fields3D_j, Fields_Derivs
-)
+from simpegEMIP.TDEM.FieldsTDEM import Fields3D_e
+from SimPEG.EM.TDEM import FieldsTDEM
 from simpegEMIP.Base import BaseEMIPProblem
-from simpegEMIP import
+import time
 
 class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
     """
@@ -15,21 +14,15 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
     solve the second order form. For the time discretization, we use backward
     Euler.
     """
+
     surveyPair = SurveyTDEM  #: A SimPEG.EM.TDEM.SurveyTDEM Class
     fieldsPair = FieldsTDEM  #: A SimPEG.EM.TDEM.FieldsTDEM Class
 
+    jpol = None
+    jpoln1 = None
+
     def __init__(self, mesh, **kwargs):
-        BaseEMIPProblem.__init__(self, mesh)
-        Debye = []
-
-    def getDebye():
-
-        return
-
-    def MeA(dt):
-        gamma = getGamma(dt)
-        val = sigmaInf + gamma
-        return mesh.getEdgeInnerProduct(val)
+        BaseEMIPProblem.__init__(self, mesh, **kwargs)
 
     def fields(self, m):
         """
@@ -47,6 +40,9 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
 
         # set initial fields
         F[:, self._fieldType+'Solution', 0] = self.getInitialFields()
+
+        self.jpol = np.zeros((F[:, 'e', 0].shape))
+        self.jpoln1 = np.zeros((F[:, 'e', 0].shape))
 
         # timestep to solve forward
         if self.verbose:
@@ -68,15 +64,18 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
                 Ainv = self.Solver(A, **self.solverOpts)
                 if self.verbose:
                     print('Done')
-
+            # Compute polarizationc urrents at current step
+            self.jpol = self.getJpol(tInd, F)
             rhs = self.getRHS(tInd+1)  # this is on the nodes of the time mesh
             Asubdiag = self.getAsubdiag(tInd)
 
             if self.verbose:
-                print('    Solving...   (tInd = {:i})'.format(tInd+1))
+                print('    Solving...   (tInd = {:d})'.format(tInd+1))
             # taking a step
             sol = Ainv * (rhs - Asubdiag * F[:, (self._fieldType + 'Solution'),
                                              tInd])
+            # Store polarization currents at this step
+            self.jpoln1 = self.jpol.copy()
 
             if self.verbose:
                 print('    Done...')
@@ -162,7 +161,54 @@ class Problem3D_e(BaseTDEMIPProblem):
     surveyPair = SurveyTDEM
 
     def __init__(self, mesh, **kwargs):
-        BaseTDEMProblem.__init__(self, mesh, **kwargs)
+        BaseTDEMIPProblem.__init__(self, mesh, **kwargs)
+
+    # TODO: move this to Baseclass
+    def getpetaI(self, time):
+        m = self.eta*self.c/(self.tau**self.c)
+        peta = m*time**(self.c-1.)*np.exp(-(time/self.tau)**self.c)
+        return peta
+
+    # TODO: move this to Baseclass
+    def getGamma(self, dt):
+        m = self.eta*self.c/(self.tau**self.c)
+        gamma = m / (self.c*(self.c+1.)) * (dt) ** self.c
+        - m / (2*self.c*(2*self.c+1.) * self.tau**self.c) * (dt) ** (2*self.c)
+        return - self.sigmaInf * gamma
+
+    # TODO: move this to Baseclass
+    def getKappa(self, dt):
+        m = self.eta*self.c/(self.tau**self.c)
+        kappa = m / (self.c+1.) * (dt) ** self.c
+        - m / ((2*self.c+1.)*self.tau ** self.c) * (dt) ** (2*self.c)
+        return - self.sigmaInf * kappa
+
+    def getJpol(self, tInd, F):
+        """
+            Computation of polarization currents
+        """
+        dt = self.timeSteps[tInd]
+        jpol = self.MeK(dt)*F[:, 'e', tInd]
+        for k in range(tInd):
+            dt = self.timeSteps[k]
+            jpol += (dt/2)*self.MeCnk(tInd+1, k)*F[:, 'e', k]
+            jpol += (dt/2)*self.MeCnk(tInd+1, k+1)*F[:, 'e', k+1]
+        return jpol
+
+    def MeA(self, dt):
+        gamma = self.getGamma(dt)
+        val = self.sigmaInf + gamma
+        return self.mesh.getEdgeInnerProduct(val)
+
+    def MeK(self, dt):
+        kappa = self.getKappa(dt)
+        return self.mesh.getEdgeInnerProduct(kappa)
+
+    def MeCnk(self, n, k):
+        tn = self.times[n]
+        tk = self.times[k]
+        val = -self.sigmaInf * self.getpetaI(tn-tk)
+        return self.mesh.getEdgeInnerProduct(val)
 
     def getAdiag(self, tInd):
         """
@@ -173,22 +219,7 @@ class Problem3D_e(BaseTDEMIPProblem):
         dt = self.timeSteps[tInd]
         C = self.mesh.edgeCurl
         MfMui = self.MfMui
-
-        return C.T * ( MfMui * C ) + 1./dt * MeA(dt)
-
-    def getAdiagDeriv(self, tInd, u, v, adjoint=False):
-        """
-        Deriv of ADiag with respect to electrical conductivity
-        """
-        assert tInd >= 0 and tInd < self.nT
-
-        dt = self.timeSteps[tInd]
-        MeSigmaInfDeriv = self.MeSigmaInfDeriv(u)
-
-        if adjoint:
-            return 1./dt * MeSigmaInfDeriv.T * v
-
-        return 1./dt * MeSigmaInfDeriv * v
+        return C.T * (MfMui * C) + 1./dt * self.MeA(dt)
 
     def getAsubdiag(self, tInd):
         """
@@ -197,36 +228,24 @@ class Problem3D_e(BaseTDEMIPProblem):
         assert tInd >= 0 and tInd < self.nT
 
         dt = self.timeSteps[tInd]
+        dtn1 = self.timeSteps[tInd-1]
 
-        return - 1./dt * self.MeSigmaInf
-
-    def getAsubdiagDeriv(self, tInd, u, v, adjoint=False):
-        """
-        Derivative of the matrix below the diagonal with respect to electrical
-        conductivity
-        """
-        dt = self.timeSteps[tInd]
-
-        if adjoint:
-            return - 1./dt * self.MeSigmaInfDeriv(u).T * v
-
-        return - 1./dt * self.MeSigmaInfDeriv(u) * v
+        return - 1./dt * self.MeA(dtn1)
 
     def getRHS(self, tInd):
         """
         right hand side
         """
-        if tInd == len(self.timeSteps):
-            tInd = tInd - 1
-        dt = self.timeSteps[tInd]
+        # if tInd == len(self.timeSteps):
+        #     tInd = tInd - 1
+
+        dt = self.timeSteps[tInd-1]
         s_m, s_e = self.getSourceTerm(tInd)
         _, s_en1 = self.getSourceTerm(tInd-1)
-        return (-1./dt * (s_e - s_en1) +
-                self.mesh.edgeCurl.T * self.MfMui * s_m)
 
-    def getRHSDeriv(self, tInd, src, v, adjoint=False):
-        # right now, we are assuming that s_e, s_m do not depend on the model.
-        return Utils.Zero()
+        return (- 1./dt * (s_e - s_en1)
+                + self.mesh.edgeCurl.T * self.MfMui * s_m
+                - 1./dt * (self.jpol-self.jpoln1))
 
 
 if __name__ == '__main__':

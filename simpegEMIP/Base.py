@@ -17,50 +17,46 @@ from SimPEG.EM.Base import BaseEMProblem
 
 class BaseEMIPProblem(BaseEMProblem):
 
-    def __init__(self, mesh, **kwargs):
+    sigmaInf, sigmaInfMap, sigmaInfDeriv = Props.Invertible(
+        "Electrical conductivity at infinite frequency (S/m)"
+    )
 
-        Problem.BaseProblem.__init__(self, mesh, **kwargs)
+    eta, etaMap, etaDeriv = Props.Invertible(
+        "Cole-Cole chargeability (V/V)"
+    )
 
-        sigmaInf, sigmaInfMap, sigmaInfDeriv = Props.Invertible(
-            "Electrical conductivity at infinite frequency (S/m)"
-        )
+    tau, tauMap, tauDeriv = Props.Invertible(
+        "Cole-Cole time constant (s)"
+    )
 
-        rhoInf, rhoInfMap, rhoInfDeriv = Props.Invertible(
-            "Electrical resistivity at infinite frequency (Ohm m)"
-        )
+    c, cMap, cDeriv = Props.Invertible(
+        "Cole-Cole frequency dependency"
+    )
 
-        Props.Reciprocal(sigmaInf, rhoInf)
+    surveyPair = Survey.BaseSurvey  #: The survey to pair with.
+    dataPair = Survey.Data  #: The data to pair with.
 
-        mu = Props.PhysicalProperty(
-            "Magnetic Permeability (H/m)",
-            default=mu_0
-        )
-        mui = Props.PhysicalProperty(
-            "Inverse Magnetic Permeability (m/H)"
-        )
+    mapPair = Maps.IdentityMap  #: Type of mapping to pair with
 
-        eta, etaMap, etaDeriv = Props.Invertible(
-            "Cole-Cole chargeability (V/V)"
-        )
+    Solver = SimpegSolver  #: Type of solver to pair with
+    solverOpts = {}  #: Solver options
 
-        tau, tauMap, tauDeriv = Props.Invertible(
-            "Cole-Cole time constant (s)"
-        )
+    verbose = False
 
-        c, cMap, cDeriv = Props.Invertible(
-            "Cole-Cole frequency dependency"
-        )
-
+    ####################################################
+    # Mass Matrices
+    ####################################################
     @property
     def deleteTheseOnModelUpdate(self):
         toDelete = []
-        if self.sigmaMap is not None or self.rhoMap is not None:
-            toDelete += ['_MeSigmaInf', '_MeSigmaInfI', '_MfRhoInf', '_MfRhoInfI']
+        if self.sigmaInfMap is not None:
+            toDelete += ['_MeSigmaInf', '_MeSigmaInfI']
 
         if hasattr(self, 'muMap') or hasattr(self, 'muiMap'):
             if self.muMap is not None or self.muiMap is not None:
                 toDelete += ['_MeMu', '_MeMuI', '_MfMui', '_MfMuiI']
         return toDelete
+
 
     ####################################################
     # Electrical Conductivity
@@ -116,54 +112,6 @@ class BaseEMIPProblem(BaseEMProblem):
         dMe_dsig = self.mesh.getEdgeInnerProductDeriv(self.sigmaInf)(u)
         return dMeSigmaInfI_dI * (dMe_dsig * self.sigmaInfDeriv)
 
-    @property
-    def MfRhoInf(self):
-        """
-        Face inner product matrix for \\(\\rhoInf\\). Used in the H-J
-        formulation
-        """
-        if getattr(self, '_MfRhoInf', None) is None:
-            self._MfRhoInf = self.mesh.getFaceInnerProduct(self.rhoInf)
-        return self._MfRhoInf
-
-    # TODO: This should take a vector
-    def MfRhoInfDeriv(self, u):
-        """
-        Derivative of :code:`MfRhoInf` with respect to the model.
-        """
-        if self.rhoInfMap is None:
-            return Utils.Zero()
-
-        return (
-            self.mesh.getFaceInnerProductDeriv(self.rhoInf)(u) * self.rhoInfDeriv
-        )
-
-    @property
-    def MfRhoInfI(self):
-        """
-        Inverse of :code:`MfRhoInf`
-        """
-        if getattr(self, '_MfRhoInfI', None) is None:
-            self._MfRhoInfI = self.mesh.getFaceInnerProduct(self.rhoInf, invMat=True)
-        return self._MfRhoInfI
-
-    # TODO: This should take a vector
-    def MfRhoInfIDeriv(self, u):
-        """
-            Derivative of :code:`MfRhoInfI` with respect to the model.
-        """
-        if self.rhoInfMap is None:
-            return Utils.Zero()
-
-        if len(self.rhoInf.shape) > 1:
-            if self.rhoInf.shape[1] > self.mesh.dim:
-                raise NotImplementedError(
-                    "Full anisotropy is not implemented for MfRhoInfIDeriv."
-                )
-
-        dMfRhoInfI_dI = -self.MfRhoInfI**2
-        dMf_drhoInf = self.mesh.getFaceInnerProductDeriv(self.rhoInf)(u)
-        return dMfRhoInfI_dI * (dMf_drhoInf * self.rhoInfDeriv)
 
 if __name__ == '__main__':
     pass
