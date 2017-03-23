@@ -189,7 +189,7 @@ class Problem3D_e(BaseTDEMIPProblem):
         """
         dt = self.timeSteps[tInd]
         jpol = self.MeK(dt)*F[:, 'e', tInd]
-        for k in range(tInd):
+        for k in range(1, tInd):
             dt = self.timeSteps[k]
             jpol += (dt/2)*self.MeCnk(tInd+1, k)*F[:, 'e', k]
             jpol += (dt/2)*self.MeCnk(tInd+1, k+1)*F[:, 'e', k+1]
