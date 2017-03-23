@@ -50,7 +50,7 @@ class BaseEMIPProblem(BaseEMProblem):
     def deleteTheseOnModelUpdate(self):
         toDelete = []
         if self.sigmaInfMap is not None:
-            toDelete += ['_MeSigmaInf', '_MeSigmaInfI']
+            toDelete += ['_MeSigmaInf', '_MeSigmaInfI', '_MeSigma0', '_MeSigma0I']
 
         if hasattr(self, 'muMap') or hasattr(self, 'muiMap'):
             if self.muMap is not None or self.muiMap is not None:
@@ -112,6 +112,15 @@ class BaseEMIPProblem(BaseEMProblem):
         dMe_dsig = self.mesh.getEdgeInnerProductDeriv(self.sigmaInf)(u)
         return dMeSigmaInfI_dI * (dMe_dsig * self.sigmaInfDeriv)
 
+    @property
+    def MeSigma0(self):
+        """
+        Edge inner product matrix for \\(\\sigma0\\).
+        Used in the E-B formulation
+        """
+        if getattr(self, '_MeSigma0', None) is None:
+            self._MeSigma0 = self.mesh.getEdgeInnerProduct(self.sigmaInf*(1.-self.eta))
+        return self._MeSigma0
 
 if __name__ == '__main__':
     pass

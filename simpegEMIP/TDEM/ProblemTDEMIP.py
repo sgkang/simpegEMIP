@@ -177,10 +177,12 @@ class Problem3D_e(BaseTDEMIPProblem):
     _formulation = 'EB'
     fieldsPair = Fields3D_e  #: A Fields3D_e
     surveyPair = SurveyTDEM
+    Adcinv = None
 
     def __init__(self, mesh, **kwargs):
         BaseTDEMIPProblem.__init__(self, mesh, **kwargs)
 
+    #TODO: Cythonize
     def getJpol(self, tInd, F):
         """
             Computation of polarization currents
@@ -245,6 +247,60 @@ class Problem3D_e(BaseTDEMIPProblem):
                 + self.mesh.edgeCurl.T * self.MfMui * s_m
                 - 1./dt * (self.jpol-self.jpoln1))
 
+    def getAdc(self):
+        MeSigma0 = self.MeSigma0
+        Grad = self.mesh.nodalGrad
+        Adc = Grad.T * MeSigma0 * Grad
+        # Handling Null space of A
+        Adc[0, 0] = Adc[0, 0] + 1.
+        return Adc
+
+    def getInitialFields(self):
+        """
+        Ask the sources for initial fields
+        """
+
+        Srcs = self.survey.srcList
+
+        ifields = np.zeros((self.mesh.nE, len(Srcs)))
+
+        if self.verbose:
+            print ("Calculating Initial fields")
+
+        for i, src in enumerate(Srcs):
+            # Check if the source is grounded
+            if src.SrcType == "Galvanic" and src.waveform.hasInitialFields:
+                # Check self.Adcinv and clean
+                if self.Adcinv is not None:
+                    self.Adcinv.clean()
+                # Factorize Adc matrix
+                if self.verbose:
+                    print ("Factorize system matrix for DC problem")
+                Adc = self.getAdc()
+                self.Adcinv = self.Solver(Adc)
+
+            ifields[:, i] = (
+                ifields[:, i] + getattr(
+                    src, '{}Initial'.format(self._fieldType), None
+                )(self)
+            )
+
+        return ifields
+
+    # def getAdcDeriv(self, u, v, adjoint=False):
+    #     Grad = self.mesh.nodalGrad
+    #     if not adjoint:
+    #         return Grad.T*(self.MeSigma0Deriv(-u)*v)
+    #     elif adjoint:
+    #         return self.MeSigma0Deriv(-u).T * (Grad*v)
+    #     return Adc
+
+    def clean(self):
+        """
+        Clean factors
+        """
+        if self.Adcinv is not None:
+            self.Adcinv.clean()
 
 if __name__ == '__main__':
     from SimPEG import Mesh
