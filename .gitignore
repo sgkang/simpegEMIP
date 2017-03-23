@@ -1,3 +1,5 @@
+*.pyx
+*.c
 *.pyc
 *.gz
 *.fls
