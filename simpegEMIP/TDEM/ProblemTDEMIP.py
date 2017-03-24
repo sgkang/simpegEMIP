@@ -43,7 +43,7 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
         F[:, self._fieldType+'Solution', 0] = self.getInitialFields()
 
         self.jpol = np.zeros((F[:, 'e', 0].shape))
-        self.jpoln1 = - (self.MeSigma0-self.MeSigmaInf) * F[:, 'e', 0]
+        self.jpoln1 = np.zeros((F[:, 'e', 0].shape))
 
         # timestep to solve forward
         if self.verbose:
@@ -182,17 +182,25 @@ class Problem3D_e(BaseTDEMIPProblem):
     def __init__(self, mesh, **kwargs):
         BaseTDEMIPProblem.__init__(self, mesh, **kwargs)
 
-    #TODO: Cythonize
+    # TODO: Cythonize
     def getJpol(self, tInd, F):
         """
             Computation of polarization currents
         """
-        dt = self.timeSteps[tInd]
-        jpol = self.MeK(dt)*F[:, 'e', tInd]
-        for k in range(tInd):
-            dt = self.timeSteps[k]
-            jpol += (dt/2)*self.MeCnk(tInd+1, k)*F[:, 'e', k]
-            jpol += (dt/2)*self.MeCnk(tInd+1, k+1)*F[:, 'e', k+1]
+        if tInd == 0:
+
+            jpol = F[:, 'e', tInd] * 0.
+
+        else:
+
+            dt = self.timeSteps[tInd]
+            jpol = self.MeK(dt)*F[:, 'e', tInd]
+
+            for k in range(1, tInd):
+                dt = self.timeSteps[k]
+                jpol += (dt/2)*self.MeCnk(tInd+1, k)*F[:, 'e', k]
+                jpol += (dt/2)*self.MeCnk(tInd+1, k+1)*F[:, 'e', k+1]
+
         return jpol
 
     def MeA(self, dt):
