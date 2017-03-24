@@ -43,7 +43,7 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
         F[:, self._fieldType+'Solution', 0] = self.getInitialFields()
 
         self.jpol = np.zeros((F[:, 'e', 0].shape))
-        self.jpoln1 = np.zeros((F[:, 'e', 0].shape))
+        self.jpoln1 = - (self.MeSigma0-self.MeSigmaInf) * F[:, 'e', 0]
 
         # timestep to solve forward
         if self.verbose:
@@ -65,7 +65,7 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
                 Ainv = self.Solver(A, **self.solverOpts)
                 if self.verbose:
                     print('Done')
-            # Compute polarizationc urrents at current step
+            # Compute polarization urrents at current step
             self.jpol = self.getJpol(tInd, F)
             rhs = self.getRHS(tInd+1)  # this is on the nodes of the time mesh
             Asubdiag = self.getAsubdiag(tInd)
@@ -189,7 +189,7 @@ class Problem3D_e(BaseTDEMIPProblem):
         """
         dt = self.timeSteps[tInd]
         jpol = self.MeK(dt)*F[:, 'e', tInd]
-        for k in range(1, tInd):
+        for k in range(tInd):
             dt = self.timeSteps[k]
             jpol += (dt/2)*self.MeCnk(tInd+1, k)*F[:, 'e', k]
             jpol += (dt/2)*self.MeCnk(tInd+1, k+1)*F[:, 'e', k+1]
