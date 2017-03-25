@@ -1,5 +1,5 @@
 from . import  Utils
-from .FieldsTDEM import Fields3D_e
+from .FieldsTDEMIP import Fields3D_e, Fields3D_phi
 from .ProblemTDEMIP import (
-    Problem3D_e, BaseTDEMIPProblem
+    Problem3D_e, Problem3D_phi, BaseTDEMIPProblem
 )

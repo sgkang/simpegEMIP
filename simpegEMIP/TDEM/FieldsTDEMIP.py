@@ -10,7 +10,19 @@ class Fields3D_e(EM.TDEM.Fields3D_e):
         self._MeSigmaInfIDeriv = self.survey.prob.MeSigmaInfIDeriv
         self._edgeCurl = self.survey.prob.mesh.edgeCurl
         self._MfMui = self.survey.prob.MfMui
-        self._times = self.survey.prob.times
+        self._times = self.survey.prob.times        
+        self._nodalGrad = self.survey.prob.mesh.nodalGrad
 
-    # TODOs: Computing j requires convolution
+class Fields3D_phi(Fields3D_e):
 
+    """Fancy Field Storage for a TDEM survey."""
+    knownFields = {'phiSolution': 'N'}
+    aliasFields = {
+                    'e': ['phiSolution', 'E', '_e']
+                  }
+
+    def _phi(self, phiSolution, srcList, tInd):
+        return phiSolution
+
+    def _e(self, phiSolution, srcList, tInd):
+        return - self._nodalGrad * phiSolution

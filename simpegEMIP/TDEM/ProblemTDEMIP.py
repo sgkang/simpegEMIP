@@ -3,7 +3,7 @@ import scipy.sparse as sp
 import numpy as np
 from SimPEG import Props, Problem, Utils, Solver as SimpegSolver
 from SimPEG.EM.TDEM.SurveyTDEM import Survey as SurveyTDEM
-from simpegEMIP.TDEM.FieldsTDEM import Fields3D_e
+from simpegEMIP.TDEM.FieldsTDEMIP import Fields3D_e, Fields3D_phi
 from SimPEG.EM.TDEM import FieldsTDEM
 from simpegEMIP.Base import BaseEMIPProblem
 import time
@@ -137,6 +137,11 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
         peta = m*time**(self.c-1.)*np.exp(-(time/self.tau)**self.c)
         return peta
 
+    def getpetaOff(self, time):        
+        peta = self.eta*np.exp(-(time/self.tau)**self.c)
+        return peta
+
+
     def getGamma(self, dt):
         m = self.eta*self.c/(self.tau**self.c)
         gamma = m / (self.c*(self.c+1.)) * (dt) ** self.c
@@ -147,7 +152,7 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
         m = self.eta*self.c/(self.tau**self.c)
         kappa = m / (self.c+1.) * (dt) ** self.c
         - m / ((2*self.c+1.)*self.tau ** self.c) * (dt) ** (2*self.c)
-        return - self.sigmaInf * kappa
+        return - self.sigmaInf * kappa 
 
 # ------------------------------- Problem3D_e ------------------------------- #
 class Problem3D_e(BaseTDEMIPProblem):
@@ -187,23 +192,26 @@ class Problem3D_e(BaseTDEMIPProblem):
         """
             Computation of polarization currents
         """
-        if tInd == 0:
 
-            jpol = F[:, 'e', tInd] * 0.
-
+        dt = self.timeSteps[tInd]
+        
+        if tInd == 0:            
+            scale = 0.
         else:
+            scale = 1.
 
-            dt = self.timeSteps[tInd]
-            jpol = self.MeK(dt)*F[:, 'e', tInd]
+        jpol = self.MeK(dt)*F[:, 'e', tInd] * scale
 
-            for k in range(1, tInd):
-                dt = self.timeSteps[k]
-                jpol += (dt/2)*self.MeCnk(tInd+1, k)*F[:, 'e', k]
-                jpol += (dt/2)*self.MeCnk(tInd+1, k+1)*F[:, 'e', k+1]
+        for k in range(1, tInd):
+            dt = self.timeSteps[k]
+            jpol += (dt/2)*self.MeCnk(tInd+1, k)*F[:, 'e', k]
+            jpol += (dt/2)*self.MeCnk(tInd+1, k+1)*F[:, 'e', k+1]
+
+        jpol += self.MeDsigOff(tInd+1)*F[:, 'e', 0]
 
         return jpol
 
-    def MeA(self, dt):
+    def MeA(self, dt):        
         gamma = self.getGamma(dt)
         val = self.sigmaInf + gamma
         return self.mesh.getEdgeInnerProduct(val)
@@ -216,6 +224,11 @@ class Problem3D_e(BaseTDEMIPProblem):
         tn = self.times[n]
         tk = self.times[k]
         val = -self.sigmaInf * self.getpetaI(tn-tk)
+        return self.mesh.getEdgeInnerProduct(val)
+
+    def MeDsigOff(self, n):
+        tn = self.times[n]
+        val = -self.sigmaInf * self.getpetaOff(tn)
         return self.mesh.getEdgeInnerProduct(val)
 
     def getAdiag(self, tInd):
@@ -295,20 +308,103 @@ class Problem3D_e(BaseTDEMIPProblem):
 
         return ifields
 
-    # def getAdcDeriv(self, u, v, adjoint=False):
-    #     Grad = self.mesh.nodalGrad
-    #     if not adjoint:
-    #         return Grad.T*(self.MeSigma0Deriv(-u)*v)
-    #     elif adjoint:
-    #         return self.MeSigma0Deriv(-u).T * (Grad*v)
-    #     return Adc
-
     def clean(self):
         """
         Clean factors
         """
         if self.Adcinv is not None:
             self.Adcinv.clean()
+
+class Problem3D_phi(Problem3D_e):
+    """
+        Solve the EB-formulation of Maxwell's equations for the electric potential, e.
+
+        Starting with
+
+        .. math::
+
+            \\nabla \\times \\mathbf{e} + \\frac{\\partial \\mathbf{b}}{\\partial t} = \\mathbf{s_m} \\
+            \\nabla \\times \mu^{-1} \\mathbf{b} - \\mathbf{j} = \\mathbf{s_e}
+
+
+        we eliminate :math:`\\frac{\\partial b}{\\partial t}` using
+
+
+        taking the time-derivative of Ampere's law, we see
+
+
+        which gives us
+
+
+    """
+
+    _fieldType = 'phi'
+    _formulation = 'EB'
+    fieldsPair = Fields3D_phi  #: A Fields3D_phi
+
+    def __init__(self, mesh, **kwargs):
+        Problem3D_e.__init__(self, mesh, **kwargs)    
+
+    def getAdiag(self, tInd):
+        """
+        Diagonal of the system matrix at a given time index
+        """
+        assert tInd >= 0 and tInd < self.nT
+
+        dt = self.timeSteps[tInd]        
+        G = self.mesh.nodalGrad     
+        A = G.T * self.MeA(dt) * G
+        A[0, 0] = A[0, 0] + 1.
+        return A
+
+    def getAsubdiag(self, tInd):
+        """
+        Matrix below the diagonal
+        """
+        assert tInd >= 0 and tInd < self.nT
+
+        return Utils.Zero()
+
+    def getRHS(self, tInd):
+        """
+        right hand side
+        """        
+        s_m, s_e = self.getSourceTerm(tInd)
+        G = self.mesh.nodalGrad
+        return G.T * (s_e+self.jpol)
+
+    def getInitialFields(self):
+        """
+        Ask the sources for initial fields
+        """
+
+        Srcs = self.survey.srcList
+        
+        ifields = np.zeros((self.mesh.nN, len(Srcs)))
+
+        if self.verbose:
+            print ("Calculating Initial fields")
+
+        for i, src in enumerate(Srcs):
+            # Check if the source is grounded
+            if src.SrcType == "Galvanic" and src.waveform.hasInitialFields:
+                # Check self.Adcinv and clean
+                if self.Adcinv is not None:
+                    self.Adcinv.clean()
+                # Factorize Adc matrix
+                if self.verbose:
+                    print ("Factorize system matrix for DC problem")
+                Adc = self.getAdc()
+                self.Adcinv = self.Solver(Adc)
+
+            ifields[:, i] = (
+                ifields[:, i] + getattr(
+                    src, '{}Initial'.format(self._fieldType), None
+                )(self)
+            )
+
+        return ifields        
+
 
 if __name__ == '__main__':
     from SimPEG import Mesh
