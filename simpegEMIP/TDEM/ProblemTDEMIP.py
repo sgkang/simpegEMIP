@@ -43,7 +43,7 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
         F[:, self._fieldType+'Solution', 0] = self.getInitialFields()
 
         self.jpol = np.zeros((F[:, 'e', 0].shape))
-        self.jpoln1 = np.zeros((F[:, 'e', 0].shape))
+        self.jpoln1 = self.getJpol(-1, F)
 
         # timestep to solve forward
         if self.verbose:
@@ -195,8 +195,11 @@ class Problem3D_e(BaseTDEMIPProblem):
 
         dt = self.timeSteps[tInd]
         
-        if tInd == 0:            
+        if tInd == 0:                        
             scale = 0.
+        elif tInd < 0:
+            jpol = self.MeDsigOff(0.)*F[:, 'e', 0]            
+            return jpol
         else:
             scale = 1.
 
@@ -207,7 +210,9 @@ class Problem3D_e(BaseTDEMIPProblem):
             jpol += (dt/2)*self.MeCnk(tInd+1, k)*F[:, 'e', k]
             jpol += (dt/2)*self.MeCnk(tInd+1, k+1)*F[:, 'e', k+1]
 
+        print ("a", tInd, jpol.sum())
         jpol += self.MeDsigOff(tInd+1)*F[:, 'e', 0]
+        print ("b", tInd, jpol.sum())
 
         return jpol
 
