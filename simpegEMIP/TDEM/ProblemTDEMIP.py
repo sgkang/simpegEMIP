@@ -195,25 +195,20 @@ class Problem3D_e(BaseTDEMIPProblem):
 
         dt = self.timeSteps[tInd]
         
-        if tInd == 0:                        
-            scale = 0.
-        elif tInd < 0:
+        # Handling when jpol at t = 0
+        if tInd < 0:
             jpol = self.MeDsigOff(0.)*F[:, 'e', 0]            
             return jpol
-        else:
-            scale = 1.
 
-        jpol = self.MeK(dt)*F[:, 'e', tInd] * scale
+        jpol = self.MeK(dt)*F[:, 'e', tInd]
 
         for k in range(1, tInd):
             dt = self.timeSteps[k]
             jpol += (dt/2)*self.MeCnk(tInd+1, k)*F[:, 'e', k]
             jpol += (dt/2)*self.MeCnk(tInd+1, k+1)*F[:, 'e', k+1]
 
-        print ("a", tInd, jpol.sum())
+        # Handling when jpol at t < 0
         jpol += self.MeDsigOff(tInd+1)*F[:, 'e', 0]
-        print ("b", tInd, jpol.sum())
-
         return jpol
 
     def MeA(self, dt):        
