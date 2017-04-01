@@ -8,3 +8,4 @@ from . import SeogiUtils
 from . import Base
 from . import DebyeDec
 from . import StretchedExponential
+from . import StoltzMacnae
