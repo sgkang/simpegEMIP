@@ -38,10 +38,6 @@ class ExpFitSurvey(Survey.BaseSurvey):
         self.ntx = self.xyz.shape[0]
         self.nD = self.ntime*self.ntx
 
-    def getP(self):
-
-        return P
-
     def eval(self, f):
         return f
 
