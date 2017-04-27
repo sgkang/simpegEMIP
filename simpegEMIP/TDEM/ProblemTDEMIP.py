@@ -137,7 +137,7 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
         peta = m*time**(self.c-1.)*np.exp(-(time/self.tau)**self.c)
         return peta
 
-    def getpetaOff(self, time):        
+    def getpetaOff(self, time):
         peta = self.eta*np.exp(-(time/self.tau)**self.c)
         return peta
 
@@ -152,7 +152,7 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
         m = self.eta*self.c/(self.tau**self.c)
         kappa = m / (self.c+1.) * (dt) ** self.c
         - m / ((2*self.c+1.)*self.tau ** self.c) * (dt) ** (2*self.c)
-        return - self.sigmaInf * kappa 
+        return - self.sigmaInf * kappa
 
 # ------------------------------- Problem3D_e ------------------------------- #
 class Problem3D_e(BaseTDEMIPProblem):
@@ -194,10 +194,10 @@ class Problem3D_e(BaseTDEMIPProblem):
         """
 
         dt = self.timeSteps[tInd]
-        
+
         # Handling when jpol at t = 0
         if tInd < 0:
-            jpol = self.MeDsigOff(0.)*F[:, 'e', 0]            
+            jpol = self.MeDsigOff(0.)*F[:, 'e', 0]
             return jpol
 
         jpol = self.MeK(dt)*F[:, 'e', tInd]
@@ -211,7 +211,7 @@ class Problem3D_e(BaseTDEMIPProblem):
         jpol += self.MeDsigOff(tInd+1)*F[:, 'e', 0]
         return jpol
 
-    def MeA(self, dt):        
+    def MeA(self, dt):
         gamma = self.getGamma(dt)
         val = self.sigmaInf + gamma
         return self.mesh.getEdgeInnerProduct(val)
@@ -290,7 +290,7 @@ class Problem3D_e(BaseTDEMIPProblem):
 
         for i, src in enumerate(Srcs):
             # Check if the source is grounded
-            if src.SrcType == "Galvanic" and src.waveform.hasInitialFields:
+            if src.srcType == "Galvanic" and src.waveform.hasInitialFields:
                 # Check self.Adcinv and clean
                 if self.Adcinv is not None:
                     self.Adcinv.clean()
@@ -343,7 +343,7 @@ class Problem3D_phi(Problem3D_e):
     fieldsPair = Fields3D_phi  #: A Fields3D_phi
 
     def __init__(self, mesh, **kwargs):
-        Problem3D_e.__init__(self, mesh, **kwargs)    
+        Problem3D_e.__init__(self, mesh, **kwargs)
 
     def getAdiag(self, tInd):
         """
@@ -351,8 +351,8 @@ class Problem3D_phi(Problem3D_e):
         """
         assert tInd >= 0 and tInd < self.nT
 
-        dt = self.timeSteps[tInd]        
-        G = self.mesh.nodalGrad     
+        dt = self.timeSteps[tInd]
+        G = self.mesh.nodalGrad
         A = G.T * self.MeA(dt) * G
         A[0, 0] = A[0, 0] + 1.
         return A
@@ -368,7 +368,7 @@ class Problem3D_phi(Problem3D_e):
     def getRHS(self, tInd):
         """
         right hand side
-        """        
+        """
         s_m, s_e = self.getSourceTerm(tInd)
         G = self.mesh.nodalGrad
         return G.T * (s_e+self.jpol)
@@ -379,7 +379,7 @@ class Problem3D_phi(Problem3D_e):
         """
 
         Srcs = self.survey.srcList
-        
+
         ifields = np.zeros((self.mesh.nN, len(Srcs)))
 
         if self.verbose:
@@ -387,7 +387,7 @@ class Problem3D_phi(Problem3D_e):
 
         for i, src in enumerate(Srcs):
             # Check if the source is grounded
-            if src.SrcType == "Galvanic" and src.waveform.hasInitialFields:
+            if src.srcType == "Galvanic" and src.waveform.hasInitialFields:
                 # Check self.Adcinv and clean
                 if self.Adcinv is not None:
                     self.Adcinv.clean()
@@ -403,7 +403,7 @@ class Problem3D_phi(Problem3D_e):
                 )(self)
             )
 
-        return ifields        
+        return ifields
 
 
 if __name__ == '__main__':
