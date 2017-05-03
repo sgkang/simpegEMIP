@@ -1,7 +1,7 @@
 # Fdb version 3
-["pdflatex"] 1492700948 "/Users/sgkang/Projects/simpegemip/docs/convolution.tex" "/Users/sgkang/Projects/simpegemip/docs/convolution.pdf" "convolution" 1492700949
-  "/Users/sgkang/Projects/simpegemip/docs/convolution.aux" 1492700949 489 40a6c7fe3eb8f3f2785f219be0400a95 ""
-  "/Users/sgkang/Projects/simpegemip/docs/convolution.tex" 1492700939 8261 61eba92fe9955eab769a7cc4cb95f55e ""
+["pdflatex"] 1493405413 "/Users/sgkang/Projects/simpegemip/docs/convolution.tex" "/Users/sgkang/Projects/simpegemip/docs/convolution.pdf" "convolution" 1493405414
+  "/Users/sgkang/Projects/simpegemip/docs/convolution.aux" 1493405413 563 12f84f5b0439066b2de16362b0ef5c39 ""
+  "/Users/sgkang/Projects/simpegemip/docs/convolution.tex" 1492701365 8667 ff3c5f6c25aed2c40aab6f1c0a24d4df ""
   "/usr/local/texlive/2014/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/local/texlive/2014/texmf-dist/fonts/map/fontname/texfonts.map" 1272929888 3287 e6b82fe08f5336d4d5ebc73fb1152e87 ""
   "/usr/local/texlive/2014/texmf-dist/fonts/tfm/adobe/times/ptmb7t.tfm" 1136768653 2172 fd0c924230362ff848a33632ed45dc23 ""
@@ -90,16 +90,16 @@
   "/usr/local/texlive/2014/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1401025944 1445653 26a0aacf3d70032b1ec192e8c7792117 ""
   "/usr/local/texlive/2014/texmf-var/web2c/pdftex/pdflatex.fmt" 1401025990 3832012 904d82bdcc8abf2b1cd296990b82553b ""
   "/usr/local/texlive/2014/texmf.cnf" 1401025936 577 a59edbde8d3a8c549d0eeaab1739e2ff ""
-  "convolution.aux" 1492700949 489 40a6c7fe3eb8f3f2785f219be0400a95 ""
-  "convolution.tex" 1492700939 8261 61eba92fe9955eab769a7cc4cb95f55e ""
+  "convolution.aux" 1493405413 563 12f84f5b0439066b2de16362b0ef5c39 ""
+  "convolution.tex" 1492701365 8667 ff3c5f6c25aed2c40aab6f1c0a24d4df ""
   "gji.cls" 1433563595 51817 d3b4fd112d078187afa99e4a6b72222b ""
   "gji_extra.sty" 1433563595 25555 54fd8f7fa535d194d7c5fad74e7aa025 ""
   (generated)
-  "/Users/sgkang/Projects/simpegemip/docs/convolution.log"
-  "convolution.aux"
-  "docs/convolution.log"
   "docs/convolution.aux"
-  "convolution.log"
+  "docs/convolution.log"
   "/Users/sgkang/Projects/simpegemip/docs/convolution.pdf"
+  "convolution.log"
+  "convolution.aux"
   "docs/convolution.pdf"
+  "/Users/sgkang/Projects/simpegemip/docs/convolution.log"
   "convolution.pdf"

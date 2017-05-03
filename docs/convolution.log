@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2014.5.25)  20 APR 2017 08:09
+This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2014.5.25)  28 APR 2017 11:50
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -242,9 +242,21 @@ Overfull \hbox (5.45305pt too wide) in paragraph at lines 121--121
 
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <10.95> not available
 (Font)              Font shape `OT1/ptm/b/n' tried instead on input line 129.
+
+Overfull \hbox (13.30457pt too wide) in paragraph at lines 137--138
+\OT1/ptm/m/n/10.95 field is ap-plied. This of-ten called in-duced po-lar-iza-ti
+on (IP) ef-fects, and ef-fec-tively be ex-pressed frequency-
+ []
+
 [1{/usr/local/texlive/2014/texmf-var/fonts/map/pdftex/updmap/pdftex.map}
 
-] [2] (/Users/sgkang/Projects/simpegemip/docs/convolution.aux) ) 
+] [2]
+Overfull \hbox (60.55351pt too wide) has occurred while \output is active
+ \OT1/ptm/m/it/10.95 3D simulations of induced polarization effects in time dom
+ain electromagnetic data using Stretched Exponential \OT1/ptm/m/n/10.95 3
+ []
+
+[3] (/Users/sgkang/Projects/simpegemip/docs/convolution.aux) ) 
 Here is how much of TeX's memory you used:
  2935 strings out of 493117
  39270 string characters out of 6135433
@@ -252,27 +264,27 @@ Here is how much of TeX's memory you used:
  6334 multiletter control sequences out of 15000+600000
  29542 words of font info for 73 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 38i,12n,24p,286b,252s stack positions out of 5000i,500n,10000p,200000b,80000s
-{/usr/local/tex
-live/2014/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/local/texlive/2014/texmf
--dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/local/texlive/2014/texmf-
-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/local/texlive/2014/texmf-d
-ist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2014/texmf-di
-st/fonts/type1/public/amsfonts/cm/cmmi6.pfb></usr/local/texlive/2014/texmf-dist
-/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/local/texlive/2014/texmf-dist/f
-onts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2014/texmf-dist/fon
-ts/type1/public/amsfonts/cm/cmr6.pfb></usr/local/texlive/2014/texmf-dist/fonts/
-type1/public/amsfonts/cm/cmr8.pfb></usr/local/texlive/2014/texmf-dist/fonts/typ
-e1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2014/texmf-dist/fonts/type
-1/public/amsfonts/cm/cmsy6.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/
-public/amsfonts/cm/cmsy8.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/ur
-w/times/utmb8a.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/urw/times/ut
-mr8a.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on /Users/sgkang/Projects/simpegemip/docs/convolution.pdf (2 pag
-es, 137006 bytes).
+ 38i,12n,24p,437b,252s stack positions out of 5000i,500n,10000p,200000b,80000s
+{/usr/local/texli
+ve/2014/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/local/texlive/2014/texmf-d
+ist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/local/texlive/2014/texmf-di
+st/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/local/texlive/2014/texmf-dis
+t/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2014/texmf-dist
+/fonts/type1/public/amsfonts/cm/cmmi6.pfb></usr/local/texlive/2014/texmf-dist/f
+onts/type1/public/amsfonts/cm/cmmi8.pfb></usr/local/texlive/2014/texmf-dist/fon
+ts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2014/texmf-dist/fonts
+/type1/public/amsfonts/cm/cmr6.pfb></usr/local/texlive/2014/texmf-dist/fonts/ty
+pe1/public/amsfonts/cm/cmr8.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1
+/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/
+public/amsfonts/cm/cmsy6.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/pu
+blic/amsfonts/cm/cmsy8.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/urw/
+times/utmb8a.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/urw/times/utmr
+8a.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
+Output written on /Users/sgkang/Projects/simpegemip/docs/convolution.pdf (3 pag
+es, 139303 bytes).
 PDF statistics:
- 68 PDF objects out of 1000 (max. 8388607)
- 49 compressed objects within 1 object stream
+ 71 PDF objects out of 1000 (max. 8388607)
+ 51 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 

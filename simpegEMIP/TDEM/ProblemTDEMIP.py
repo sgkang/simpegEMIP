@@ -197,7 +197,7 @@ class Problem3D_e(BaseTDEMIPProblem):
 
         # Handling when jpol at t = 0
         if tInd < 0:
-            jpol = self.MeDsigOff(0.)*F[:, 'e', 0]
+            jpol = self.MeDsigOff(0)*F[:, 'e', 0]
             return jpol
 
         jpol = self.MeK(dt)*F[:, 'e', tInd]
@@ -404,12 +404,3 @@ class Problem3D_phi(Problem3D_e):
             )
 
         return ifields
-
-
-if __name__ == '__main__':
-    from SimPEG import Mesh
-    cs, ncx, ncz, npad = 5., 25, 15, 15
-    hx = [(cs, ncx), (cs, npad, 1.3)]
-    hz = [(cs, npad, -1.3), (cs, ncz), (cs, npad, 1.3)]
-    mesh = Mesh.CylMesh([hx, 1, hz], '00C')
-    prob = BaseTDEMIPProblem(mesh)

@@ -14,7 +14,7 @@ def halfSpaceProblemAnaCircLoopDiff(showIt=False, waveformType="STEPOFF"):
 	cs, ncx, ncz, npad = 20., 25, 25, 15
 	hx = [(cs,ncx), (cs,npad,1.3)]
 	hz = [(cs,npad,-1.3), (cs,ncz), (cs,npad,1.3)]
-	mesh = Mesh.CylMesh([hx,1,hz], '00C')    
+	mesh = Mesh.CylMesh([hx,1,hz], '00C')
 	prb = ProblemATEM_b(mesh)
 	if waveformType =="GENERAL":
 		timeon = np.cumsum(np.r_[np.ones(10)*1e-3, np.ones(10)*5e-4, np.ones(10)*1e-4])
@@ -24,7 +24,7 @@ def halfSpaceProblemAnaCircLoopDiff(showIt=False, waveformType="STEPOFF"):
 		current_on = np.ones_like(timeon)
 		current_on[[0,-1]] = 0.
 		current = np.r_[current_on, np.zeros_like(timeoff)]
-		wave = np.c_[time, current]		
+		wave = np.c_[time, current]
 		prb.waveformType = "GENERAL"
 		prb.currentwaveform(wave)
 		prb.t0 = time.min()
@@ -50,17 +50,17 @@ def halfSpaceProblemAnaCircLoopDiff(showIt=False, waveformType="STEPOFF"):
 	if showIt:
 		plt.loglog(rx.times, bz_ana)
 		plt.loglog(rx.times, out)
-		plt.show()	
+		plt.show()
 	return err
 
 
 class TDEM_bTests(unittest.TestCase):
 
 	def test_analytic_STEPOFF(self):
-		self.assertTrue(halfSpaceProblemAnaCircLoopDiff(showIt=False,waveformType="STEPOFF") < 0.3)	
-		
+		self.assertTrue(halfSpaceProblemAnaCircLoopDiff(showIt=False,waveformType="STEPOFF") < 0.3)
+
 	def test_analytic_GENERAL(self):
-		self.assertTrue(halfSpaceProblemAnaCircLoopDiff(showIt=False, waveformType="GENERAL") < 0.3)	        
+		self.assertTrue(halfSpaceProblemAnaCircLoopDiff(showIt=False, waveformType="GENERAL") < 0.3)
 
 if __name__ == '__main__':
     unittest.main()
