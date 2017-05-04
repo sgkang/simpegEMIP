@@ -183,18 +183,17 @@ class LinearIPProblem(BaseEMIPProblem):
         if self.galvanicterm:
             A = self.getAdc()
             self.Ainvdc = self.Solver(A, **self.solverOpts)
-
-        for src in self.survey.srcList:
+            print (">> Consider Galvanic term")
+        for isrc, src in enumerate(self.survey.srcList):
             for rx in src.rxList:
                 eref = self.f[src, 'eref'].copy()
-                S_temp = MeDeriv(eref)*Utils.sdiag(self.sigmaInf)*self.actMap.P
-                print (rx.locs, rx.projComp)
+                S_temp = MeDeriv(eref)*Utils.sdiag(self.sigmaInf)*self.actMap.P                
                 G_temp = self.BiotSavartFun(rx.locs, component=rx.projComp)
                 if self.galvanicterm:
                     rhs = (
                         Grad.T*self.MeSigmaInf*self.MeI*self.mesh.aveE2CCV.T*G_temp.T
                         )
-                    x = Ainv*rhs
+                    x = self.Ainvdc*rhs
                     J.append(
                         - Utils.mkvc(G_temp*self.mesh.aveE2CCV*self.MeI*S_temp)
                         + Utils.mkvc((S_temp.T*self.mesh.nodalGrad*x).T)
@@ -203,6 +202,9 @@ class LinearIPProblem(BaseEMIPProblem):
                     J.append(
                         Utils.mkvc(- G_temp*self.mesh.aveE2CCV*self.MeI*S_temp)
                         )
+            sys.stdout.write(("\r %d / %d")%(isrc, self.survey.nSrc))
+            sys.stdout.flush()
+
 
         return - np.vstack(J)
 
