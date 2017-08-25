@@ -9,6 +9,7 @@ from simpegEMIP.TDEM.Survey import Survey
 from simpegEMIP.TDEM.FieldsTDEMIP import Fields3D_e_Inductive
 import time
 from scipy.constants import mu_0
+import sys
 
 
 # TODO: not sure this is a right way to do ...
@@ -117,13 +118,23 @@ class LinearIPProblem(BaseEMIPProblem):
     def getPeta(self, t):
         signs = [1., -1., -1., 1]
         peta = np.zeros_like(self.eta)
-        if self.wave_option == "impulse_ramp":
+
+        if self.wave_option == "impulse":
+            m = self.eta*self.c/(self.tau**self.c)
+            a = self.c*(t/self.tau)**self.c
+            peta = m*(
+                t**(self.c-2.)*np.exp(-(t/self.tau)**self.c) *
+                (self.c-1-self.c*(t/self.tau)**self.c)
+            )
+
+        elif self.wave_option == "impulse_ramp":
             m = self.eta*self.c/(self.tau**self.c)
             for i, tlag in enumerate(self.tlags):
                 peta += (
-                    signs[i]*m*(t+tlag)**(self.c-1.)*np.exp(-((t+tlag)/self.tau)**self.c)
+                    signs[i]*m*(t+tlag)**(self.c-1.) *
+                    np.exp(-((t+tlag)/self.tau)**self.c)
                     )
-            dt = self.tlags[1]
+            # dt = self.tlags[1]
 
         elif self.wave_option == "step_ramp":
             for tlag in self.tlags:
@@ -187,7 +198,7 @@ class LinearIPProblem(BaseEMIPProblem):
         for isrc, src in enumerate(self.survey.srcList):
             for rx in src.rxList:
                 eref = self.f[src, 'eref'].copy()
-                S_temp = MeDeriv(eref)*Utils.sdiag(self.sigmaInf)*self.actMap.P                
+                S_temp = MeDeriv(eref)*Utils.sdiag(self.sigmaInf)*self.actMap.P
                 G_temp = self.BiotSavartFun(rx.locs, component=rx.projComp)
                 if self.galvanicterm:
                     rhs = (
@@ -300,7 +311,6 @@ class LinearIPProblem(BaseEMIPProblem):
             self.mesh.getEdgeInnerProductDeriv(self.sigma)(u)
             * dsigma_dlogsigma
             )
-
 
 # ------------------------------- Problem3D_e ------------------------------- #
 class Problem3D_Inductive(LinearIPProblem):
