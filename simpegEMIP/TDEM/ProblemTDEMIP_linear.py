@@ -97,7 +97,8 @@ def get_we_eff(e, eref, J, mesh, actinds):
     J_sum_src = (J**2).sum(axis=0)
     we_cc_eff = np.zeros((mesh.nC, ntime))
     for iSrc in range(nSrc):
-        we_cc = getwe(e[:, iSrc, :], eref[:, iSrc], mesh)
+        we = getwe(e[:, iSrc, :], eref[:, iSrc], mesh)
+        we_cc = mesh.aveE2CCV * we
         a_ik = J[iSrc, :]**2 / J_sum_src
         we_cc_eff[actinds] += Utils.sdiag(a_ik) * we_cc[actinds, :]
     return we_cc_eff
@@ -346,7 +347,7 @@ class LinearIPProblem(BaseEMIPProblem, BaseTimeProblem):
         self.model = m
         Jv = []
         if self.J is None:
-            self.getJ(f=f)
+            self.J = self.getJ(f=f)
 
         ntime = len(self.survey.times)
 
@@ -448,6 +449,7 @@ class LinearIPProblem(BaseEMIPProblem, BaseTimeProblem):
             )
 
 
+
 # ------------------------------- Problem3D_e ------------------------------- #
 class Problem3D_Inductive(LinearIPProblem):
     """
@@ -530,3 +532,4 @@ class Problem3D_Inductive(LinearIPProblem):
         """
         if self.Adcinv is not None:
             self.Adcinv.clean()
+
