@@ -4,6 +4,7 @@ import numpy as np
 from SimPEG import Maps, Props, Problem, Utils, Solver as SimpegSolver
 from SimPEG.EM.Static.DC import FieldsDC
 from SimPEG.EM.TDEM import FieldsTDEM
+from SimPEG.Problem import BaseTimeProblem
 from simpegEMIP.Base import BaseEMIPProblem
 from simpegEMIP.TDEM.Survey import Survey
 from simpegEMIP.TDEM.FieldsTDEMIP import Fields3D_e_Inductive
@@ -14,21 +15,97 @@ import sys
 
 # TODO: not sure this is a right way to do ...
 def geteref(e, mesh, option=None, tInd=0):
-    ntime = e.shape[1]
-    if option == "max":
-        inds = np.argmax(abs(e), axis=1)
-        inds_max = Utils.sub2ind(
-            e.shape, np.c_[np.arange(mesh.nE), inds]
-            )
-        eref = Utils.mkvc(e)[inds_max]
+    """
+    geteref(e, mesh, option=None, tInd=0)
+
+    Return a reference electric field of given option.
+
+    Parameters
+    ----------
+    e : array of electric field [nE x nSrc x ntime]
+        or [nE x ntime] for a single source.
+    mesh: SimPEG mesh object.
+    option: "None" or "max"
+        "None" requires tInd, and simply choose that time index
+        "max" quarrry electric field at maximum.
+    tInd: int, time index for the choice of the reference electric field
+
+    """
+    # Single source
+    if e.ndim == 2:
+        ntime = e.shape[1]
+        if option == "max":
+            inds = np.argmax(abs(e), axis=1)
+            inds_max = Utils.sub2ind(
+                e.shape, np.c_[np.arange(mesh.nE), inds]
+                )
+            eref = Utils.mkvc(e)[inds_max]
+        else:
+            eref = e[:, tInd]
+
+    # Multi source
+    elif e.ndim == 3:
+        ntime = e.shape[2]
+        nSrc = e.shape[1]
+        eref = []
+        if option == "max":
+            for iSrc in range (nSrc):
+                inds = np.argmax(abs(e[:, iSrc, :]), axis=1)
+                inds_max = Utils.sub2ind(
+                    e[:, iSrc, :].shape, np.c_[np.arange(mesh.nE), inds]
+                    )
+                eref.append(Utils.mkvc(e[:, iSrc, :])[inds_max])
+            eref = np.vstack(eref).T
+        else:
+            eref = e[:, :, tInd]
     else:
-        eref = e[:, tInd]
+        raise Exception("Dimension of e should be either 1 or 2")
     return eref
 
 
-class LinearIPProblem(BaseEMIPProblem):
+def getwe(e, eref, mesh):
     """
-    XXX
+    getwe(e, eref, mesh)
+
+    Return a time history of electric field, we for a single source.
+
+    Parameters
+    ----------
+    e : array of electric field [nE x ntime] for a single source
+    mesh: SimPEG mesh object.
+
+    See also
+    --------
+
+    get_we_eff: Return an effective we from multi-sources.
+    geteref: Return a reference electric field of given option.
+
+    """
+    e_eref = Utils.sdiag(eref) * e
+    eref_eref = eref**2
+    we = Utils.sdiag(1./eref_eref) * e_eref
+    we_cc = mesh.aveE2CCV * we
+    we_cc[we_cc < 0.] = 0.
+    return we_cc
+
+
+def get_we_eff(e, eref, J, mesh, actinds):
+    # Here we assume dimension of J: [nSrc x nC]
+    nSrc = e.shape[1]
+    ntime = e.shape[2]
+    we_eff = np.zeros((mesh.nE, nSrc))
+    J_sum_src = (J**2).sum(axis=0)
+    we_cc_eff = np.zeros((mesh.nC, ntime))
+    for iSrc in range(nSrc):
+        we_cc = getwe(e[:, iSrc, :], eref[:, iSrc], mesh)
+        a_ik = J[iSrc, :]**2 / J_sum_src
+        we_cc_eff[actinds] += Utils.sdiag(a_ik) * we_cc[actinds, :]
+    return we_cc_eff
+
+
+class LinearIPProblem(BaseEMIPProblem, BaseTimeProblem):
+    """
+    Linnear IP Problem class
     """
 
     surveyPair = Survey
@@ -46,6 +123,7 @@ class LinearIPProblem(BaseEMIPProblem):
     # Options are:
     # impulse_ramp
     # step_ramp
+    we = None
 
     def __init__(self, mesh, **kwargs):
         BaseEMIPProblem.__init__(self, mesh, **kwargs)
@@ -119,15 +197,7 @@ class LinearIPProblem(BaseEMIPProblem):
         signs = [1., -1., -1., 1]
         peta = np.zeros_like(self.eta)
 
-        if self.wave_option == "impulse":
-            m = self.eta*self.c/(self.tau**self.c)
-            a = self.c*(t/self.tau)**self.c
-            peta = m*(
-                t**(self.c-2.)*np.exp(-(t/self.tau)**self.c) *
-                (self.c-1-self.c*(t/self.tau)**self.c)
-            )
-
-        elif self.wave_option == "impulse_ramp":
+        if self.wave_option == "impulse_ramp":
             m = self.eta*self.c/(self.tau**self.c)
             for i, tlag in enumerate(self.tlags):
                 peta += (
@@ -146,36 +216,90 @@ class LinearIPProblem(BaseEMIPProblem):
 
         return peta
 
-    def PetaEtaDeriv(self, t, v, adjoint=False):
-        v = np.array(v, dtype=float)
-        taui_t_c = (self.taui*t)**self.c
-        dpetadeta = np.exp(-taui_t_c)
-        if adjoint:
-            return self.etaDeriv.T * (dpetadeta * v)
-        else:
-            return dpetadeta * (self.etaDeriv*v)
+    # This evaluates convolution, and takes most of time
+    # TODO: Use cython
+    @property
+    def Peta(self):
+        if getattr(self, '_Peta', None) is None:
+            ntimes = self.times.size
+            dt_temp = np.diff(self.times)
+            dt = np.r_[self.times[0], dt_temp]
+            self._Peta = np.zeros((self.mesh.nC, ntimes))
+            # Ignore first step since we = 0 when t=0
+            for i in range(1, ntimes):
+                temp = np.zeros(self.mesh.nC)
+                for k in range(1, i):
+                    temp += self.we[:, k-1] * self.getpetaI(self.times[i]-self.times[k-1]) * dt[k] * 0.5
+                    temp += self.we[:, k] * self.getpetaI(self.times[i]-self.times[k]) * dt[k] * 0.5
+                self.Peta[:, i] = temp
+                + self.getKappa(dt[i]) * self.we[:, i-1]
+                + self.getGamma(dt[i]) * self.we[:, i]
+        return self._Peta
 
-    def PetaTauiDeriv(self, t, v, adjoint=False):
-        v = np.array(v, dtype=float)
-        taui_t_c = (self.taui*t)**self.c
-        dpetadtaui = (
-            - self.c * self.eta / self.taui * taui_t_c * np.exp(-taui_t_c)
-            )
-        if adjoint:
-            return self.tauiDeriv.T * (dpetadtaui*v)
-        else:
-            return dpetadtaui * (self.tauiDeriv*v)
+    @property
+    def Pt(self):
+        if getattr(self, '_Pt', None) is None:
+            self._Pt = self.timeMesh.getInterpolationMat(
+                self.survey.times, "N"
+                )
+            return self._Pt
 
-    def PetaCDeriv(self, t, v, adjoint=False):
-        v = np.array(v, dtype=float)
-        taui_t_c = (self.taui*t)**self.c
-        dpetadc = (
-            -self.eta * (taui_t_c)*np.exp(-taui_t_c) * np.log(self.taui*t)
-            )
-        if adjoint:
-            return self.cDeriv.T * (dpetadc*v)
-        else:
-            return dpetadc * (self.cDeriv*v)
+    @property
+    def Pdt(self):
+            self._Pdt = self.timeMesh.getInterpolationMat(
+                self.survey.times, "CC"
+                ) * self.timeMesh.faceDiv
+            return self._Pdt
+
+    def getpetaI(self, time):
+        m = self.eta*self.c/(self.tau**self.c)
+        peta = m*time**(self.c-1.)*np.exp(-(time/self.tau)**self.c)
+        return peta
+
+    def getGamma(self, dt):
+        m = self.eta*self.c/(self.tau**self.c)
+        gamma = m / (self.c*(self.c+1.)) * (dt) ** self.c
+        - m / (2*self.c*(2*self.c+1.) * self.tau**self.c) * (dt) ** (2*self.c)
+        return - self.sigmaInf * gamma
+
+    def getKappa(self, dt):
+        m = self.eta*self.c/(self.tau**self.c)
+        kappa = m / (self.c+1.) * (dt) ** self.c
+        - m / ((2*self.c+1.)*self.tau ** self.c) * (dt) ** (2*self.c)
+        return - self.sigmaInf * kappa
+
+# Derivatives
+
+    # def PetaEtaDeriv(self, t, v, adjoint=False):
+    #     v = np.array(v, dtype=float)
+    #     taui_t_c = (self.taui*t)**self.c
+    #     dpetadeta = np.exp(-taui_t_c)
+    #     if adjoint:
+    #         return self.etaDeriv.T * (dpetadeta * v)
+    #     else:
+    #         return dpetadeta * (self.etaDeriv*v)
+
+    # def PetaTauiDeriv(self, t, v, adjoint=False):
+    #     v = np.array(v, dtype=float)
+    #     taui_t_c = (self.taui*t)**self.c
+    #     dpetadtaui = (
+    #         - self.c * self.eta / self.taui * taui_t_c * np.exp(-taui_t_c)
+    #         )
+    #     if adjoint:
+    #         return self.tauiDeriv.T * (dpetadtaui*v)
+    #     else:
+    #         return dpetadtaui * (self.tauiDeriv*v)
+
+    # def PetaCDeriv(self, t, v, adjoint=False):
+    #     v = np.array(v, dtype=float)
+    #     taui_t_c = (self.taui*t)**self.c
+    #     dpetadc = (
+    #         -self.eta * (taui_t_c)*np.exp(-taui_t_c) * np.log(self.taui*t)
+    #         )
+    #     if adjoint:
+    #         return self.cDeriv.T * (dpetadc*v)
+    #     else:
+    #         return dpetadc * (self.cDeriv*v)
 
     def fields(self, m):
         return None
@@ -213,28 +337,39 @@ class LinearIPProblem(BaseEMIPProblem):
                     J.append(
                         Utils.mkvc(- G_temp*self.mesh.aveE2CCV*self.MeI*S_temp)
                         )
-            sys.stdout.write(("\r %d / %d")%(isrc, self.survey.nSrc))
+            sys.stdout.write(("\r %d / %d") % (isrc+1, self.survey.nSrc))
             sys.stdout.flush()
-
-
-        return - np.vstack(J)
+        return -np.vstack(J)
 
     def forward(self, m, f=None):
 
         self.model = m
         Jv = []
         if self.J is None:
-            self.J = self.getJ(f=f)
+            self.getJ(f=f)
 
         ntime = len(self.survey.times)
 
         self.model = m
-        for tind in range(ntime):
-            Jv.append(
-                self.J.dot(
-                    self.actMap.P.T*self.getPeta(self.survey.times[tind]))
-                )
-        return np.hstack(Jv)
+
+        # both impulse and step requires convolution
+        if self.wave_option == "impulse":
+            return - self.J.dot(
+                self.actMap.P.T *
+                (self.Peta * self.Pdt.T)
+                ).flatten()
+        elif self.wave_option == "step":
+            return self.J.dot(
+                self.actMap.P.T *
+                (self.Peta * self.Pt.T)
+                ).flatten()
+        else:
+            for tind in range(ntime):
+                Jv.append(
+                    self.J.dot(
+                        self.actMap.P.T*self.getPeta(self.survey.times[tind]))
+                    )
+            return np.hstack(Jv)
 
     def Jvec(self, m, v, f=None):
 
@@ -311,6 +446,7 @@ class LinearIPProblem(BaseEMIPProblem):
             self.mesh.getEdgeInnerProductDeriv(self.sigma)(u)
             * dsigma_dlogsigma
             )
+
 
 # ------------------------------- Problem3D_e ------------------------------- #
 class Problem3D_Inductive(LinearIPProblem):
