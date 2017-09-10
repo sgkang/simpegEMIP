@@ -530,6 +530,7 @@ class Problem3D_Inductive(LinearIPProblem):
         if self.Adcinv is not None:
             self.Adcinv.clean()
 
+
 class Problem3D_Inductive_singletime(Problem3D_Inductive):
     peta, petaMap, petaDeriv = Props.Invertible(
         "Peudo-chargeability"

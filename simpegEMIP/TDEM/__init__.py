@@ -4,8 +4,9 @@ from .ProblemTDEMIP import (
     Problem3D_e, Problem3D_phi, BaseTDEMIPProblem
 )
 from .ProblemTDEMIP_linear import (
-    Problem3D_Inductive, geteref, getwe, get_we_eff
+    Problem3D_Inductive, Problem3D_Inductive_singletime,
+    geteref, getwe, get_we_eff
 )
 from .Survey import (
-    Survey
+    Survey, Survey_singletime
 )
