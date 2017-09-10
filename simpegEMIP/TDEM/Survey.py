@@ -53,4 +53,4 @@ class Survey_singletime(Survey):
 
     @property
     def nD(self):
-        return self.vnD.sum() / self.times.size
+        return int(self.vnD.sum() / self.times.size)

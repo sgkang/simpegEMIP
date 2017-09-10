@@ -538,7 +538,6 @@ class Problem3D_Inductive_singletime(Problem3D_Inductive):
 
     def forward(self, m, f=None):
         self.model = m
-        Jv = []
         if self.J is None:
             self.getJ(f=f)
 
