@@ -39,3 +39,18 @@ class Survey(BaseEMSurvey):
         """
         return self.prob.forward(m, f=f)
 
+
+class Survey_singletime(Survey):
+
+    def dpred(self, m, f=None):
+        """
+            Predicted data.
+
+            .. math::
+                d_\\text{pred} = Pf(m)
+        """
+        return self.prob.forward(m, f=f)
+
+    @property
+    def nD(self):
+        return self.vnD.sum() / self.times.size

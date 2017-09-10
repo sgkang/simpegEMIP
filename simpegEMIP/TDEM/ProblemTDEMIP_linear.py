@@ -63,7 +63,7 @@ def geteref(e, mesh, option=None, tInd=0):
     return eref
 
 
-def getwe(e, eref, mesh):
+def getwe(e, eref, mesh, ndim=1):
     """
     getwe(e, eref, mesh)
 
@@ -83,8 +83,7 @@ def getwe(e, eref, mesh):
     """
     e_eref = Utils.sdiag(eref) * e
     eref_eref = eref**2
-    we = Utils.sdiag(1./eref_eref) * e_eref
-    we_cc = mesh.aveE2CCV * we
+    we_cc = Utils.sdiag(1./(mesh.aveE2CC*eref_eref)) * (mesh.aveE2CC*e_eref)
     we_cc[we_cc < 0.] = 0.
     return we_cc
 
@@ -97,8 +96,7 @@ def get_we_eff(e, eref, J, mesh, actinds):
     J_sum_src = (J**2).sum(axis=0)
     we_cc_eff = np.zeros((mesh.nC, ntime))
     for iSrc in range(nSrc):
-        we = getwe(e[:, iSrc, :], eref[:, iSrc], mesh)
-        we_cc = mesh.aveE2CCV * we
+        we_cc = getwe(e[:, iSrc, :], eref[:, iSrc], mesh)
         a_ik = J[iSrc, :]**2 / J_sum_src
         we_cc_eff[actinds] += Utils.sdiag(a_ik) * we_cc[actinds, :]
     return we_cc_eff
@@ -449,7 +447,6 @@ class LinearIPProblem(BaseEMIPProblem, BaseTimeProblem):
             )
 
 
-
 # ------------------------------- Problem3D_e ------------------------------- #
 class Problem3D_Inductive(LinearIPProblem):
     """
@@ -532,4 +529,25 @@ class Problem3D_Inductive(LinearIPProblem):
         """
         if self.Adcinv is not None:
             self.Adcinv.clean()
+
+class Problem3D_Inductive_singletime(Problem3D_Inductive):
+    peta, petaMap, petaDeriv = Props.Invertible(
+        "Peudo-chargeability"
+    )
+
+    def forward(self, m, f=None):
+        self.model = m
+        Jv = []
+        if self.J is None:
+            self.getJ(f=f)
+
+        ntime = len(self.survey.times)
+        self.model = m
+        return self.J.dot(self.actMap.P.T * self.peta)
+
+    def Jvec(self, m, v, f=None):
+        return self.J.dot(self.actMap.P.T * self.petaDeriv * v)
+
+    def Jtvec(self, m, v, f=None):
+        return self.petaDeriv.T * (self.actMap.P*(self.J.T.dot(v)))
 
