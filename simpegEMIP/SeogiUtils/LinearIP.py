@@ -1,9 +1,9 @@
-# from SimPEG import Problem, Survey, Utils, Maps
+from SimPEG import Problem, Survey, Utils, Maps
 # from pymatsolver import MumpsSolver
-# import BiotSavart
-# import numpy as np
-# from sys import stdout
-# from time import sleep
+import BiotSavart
+import numpy as np
+from sys import stdout
+from time import sleep
 
 # class LinearProblem(Problem.BaseProblem):
 #     surveyPair = Survey.BaseSurvey
@@ -110,16 +110,16 @@
 #         else:
 #             return Utils.mkvc(self.Wd*self.residual(m, u=u))
 
-# class WeightMap(Maps.IdentityMap):
-#     """Weighted Map for distributed parameters"""
+class WeightMap(Maps.IdentityMap):
+    """Weighted Map for distributed parameters"""
 
-#     def __init__(self, mesh, weight, **kwargs):
-#         Maps.IdentityMap.__init__(self, mesh)
-#         self.mesh = mesh
-#         self.weight = weight
+    def __init__(self, weight, **kwargs):
+        Maps.IdentityMap.__init__(self)
+        self.mesh = mesh
+        self.weight = weight
 
-#     def _transform(self, m):
-#         return m*self.weight
+    def _transform(self, m):
+        return m*self.weight
 
-#     def deriv(self, m):
-#         return Utils.sdiag(self.weight)
+    def deriv(self, m):
+        return Utils.sdiag(self.weight)
