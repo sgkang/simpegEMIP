@@ -7,6 +7,8 @@ from simpegEMIP.TDEM.FieldsTDEMIP import Fields3D_e, Fields3D_phi
 from SimPEG.EM.TDEM import FieldsTDEM
 from simpegEMIP.Base import BaseEMIPProblem
 import time
+import getJpol as pyx
+# import getJpol_py as pyx
 
 
 class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
@@ -65,11 +67,31 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
                 Ainv = self.Solver(A, **self.solverOpts)
                 if self.verbose:
                     print('Done')
+
             # Compute polarization urrents at current step
-            self.jpol = self.getJpol(tInd, F)
+            # Cythonize
+            # self.jpol = self.getJpol(tInd, F)
+            MeK = self.MeK(dt).diagonal()
+            MeDsigOff_0 = self.MeDsigOff(0).diagonal()
+            MeDsigOff_n = self.MeDsigOff(tInd).diagonal()
+            MeCnk = self.getMeCnk(tInd+1, tInd)
+
+            if F[:, 'e', :].ndim == 2:
+                n, m = F[:, 'e', :].shape
+                self.jpol = pyx.getJpol(
+                    self.timeSteps, tInd, F[:, 'e', :].reshape(n, 1, m, order="F"),
+                    MeK, MeCnk,
+                    MeDsigOff_0, MeDsigOff_n
+                    )
+            else:
+                self.jpol = pyx.getJpol(
+                    self.timeSteps, tInd, F[:, 'e', :],
+                    MeK, MeCnk,
+                    MeDsigOff_0, MeDsigOff_n
+                    )
+
             rhs = self.getRHS(tInd+1)  # this is on the nodes of the time mesh
             Asubdiag = self.getAsubdiag(tInd)
-
             if self.verbose:
                 print('    Solving...   (tInd = {:d})'.format(tInd+1))
             # taking a step
@@ -140,7 +162,6 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
     def getpetaOff(self, time):
         peta = self.eta*np.exp(-(time/self.tau)**self.c)
         return peta
-
 
     def getGamma(self, dt):
         m = self.eta*self.c/(self.tau**self.c)
@@ -225,6 +246,11 @@ class Problem3D_e(BaseTDEMIPProblem):
         tk = self.times[k]
         val = -self.sigmaInf * self.getpetaI(tn-tk)
         return self.mesh.getEdgeInnerProduct(val)
+
+    def getMeCnk(self, n, k):
+        return np.hstack(
+            [self.MeCnk(n, i).diagonal().reshape([-1, 1]) for i in range(k+1) ]
+            )
 
     def MeDsigOff(self, n):
         tn = self.times[n]
