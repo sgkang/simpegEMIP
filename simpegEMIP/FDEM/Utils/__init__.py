@@ -1,2 +1,2 @@
-from ColeCole import *
-from Analytics import *
+from .ColeCole import *
+from .Analytics import *

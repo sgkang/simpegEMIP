@@ -3,6 +3,7 @@ from SimPEG import Problem, Survey, Utils, Maps
 import numpy as np
 import scipy.sparse as sp
 
+
 class SEInvProblem(Problem.BaseProblem):
 
     sigmaInf, sigmaInfMap, sigmaInfDeriv = Props.Invertible(
@@ -82,6 +83,7 @@ class SEInvImpulseProblem(SEInvProblem):
         J = tempeta * self.etaDeriv + temptau * self.tauDeriv + tempc * self.cDeriv
         return J
 
+
 class SESurvey(Survey.BaseSurvey):
 
 
@@ -102,6 +104,7 @@ class SESurvey(Survey.BaseSurvey):
             return Utils.mkvc(np.r_[self.dpred(m, f=f) - self.dobs])
         else:
             return Utils.mkvc(self.dpred(m, f=f) - self.dobs)
+
 
 class SE_MultiSurvey(Survey.BaseSurvey):
 

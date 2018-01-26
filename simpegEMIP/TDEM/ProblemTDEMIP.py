@@ -7,8 +7,9 @@ from simpegEMIP.TDEM.FieldsTDEMIP import Fields3D_e, Fields3D_phi
 from SimPEG.EM.TDEM import FieldsTDEM
 from simpegEMIP.Base import BaseEMIPProblem
 import time
-import getJpol as pyx
-# import getJpol_py as pyx
+# import getJpol as pyx
+from . import getJpol_py as pyx
+from profilehooks import profile
 
 
 class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
@@ -27,6 +28,7 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
     def __init__(self, mesh, **kwargs):
         BaseEMIPProblem.__init__(self, mesh, **kwargs)
 
+    @profile
     def fields(self, m):
         """
         Solve the forward problem for the fields.

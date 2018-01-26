@@ -1,5 +1,5 @@
 from SimPEG import Problem, Survey, Utils, Maps
-import Convolution
+from . import Convolution
 import numpy as np
 
 

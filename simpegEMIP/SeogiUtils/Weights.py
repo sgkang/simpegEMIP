@@ -1,4 +1,4 @@
-import Linarg
+from . import Linarg
 import numpy as np
 from SimPEG import Utils
 

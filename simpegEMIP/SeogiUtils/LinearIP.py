@@ -1,6 +1,6 @@
 from SimPEG import Problem, Survey, Utils, Maps
 # from pymatsolver import MumpsSolver
-import BiotSavart
+from . import BiotSavart
 import numpy as np
 from sys import stdout
 from time import sleep

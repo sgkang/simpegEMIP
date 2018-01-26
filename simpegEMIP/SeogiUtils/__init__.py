@@ -1,8 +1,8 @@
-import View
-import BiotSavart
-import LinearIP
-import PetaInv
-import Cole
-import Linarg
-import MagneticDipoleFields
-import Weights
+from . import View
+from . import BiotSavart
+from . import LinearIP
+from . import PetaInv
+from . import Cole
+from . import Linarg
+from . import MagneticDipoleFields
+from . import Weights

@@ -1,5 +1,4 @@
 import numpy as np
-from EMTD.Utils import transFilt
 from scipy.special import erfc
 
 

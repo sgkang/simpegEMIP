@@ -6,7 +6,7 @@ from scipy.constants import mu_0
 def BiotSavartFun(mesh, r_pts, component = 'z'):
 	"""
 		Compute systematrix G using Biot-Savart Law
-		
+
 
 		G = np.vstack((G1,G2,G3..,Gnpts)
 
@@ -19,7 +19,7 @@ def BiotSavartFun(mesh, r_pts, component = 'z'):
 		npts = r_pts.shape[0]
 	e = np.ones((mesh.nC, 1))
 	o = np.zeros((mesh.nC, 1))
-	const = mu_0/4/np.pi	
+	const = mu_0/4/np.pi
 	G = np.zeros((npts, mesh.nC*3))
 
 	for i in range(npts):
@@ -29,16 +29,16 @@ def BiotSavartFun(mesh, r_pts, component = 'z'):
 			r_rx = np.repeat(r_pts[i,:].reshape([1,-1]), mesh.nC, axis = 0)
 		r_CC = mesh.gridCC
 		r = r_rx-r_CC
-		r_abs = np.sqrt((r**2).sum(axis = 1))		
+		r_abs = np.sqrt((r**2).sum(axis = 1))
 		rxind = r_abs==0.
 		r_abs[rxind] = mesh.vol.min()**(1./3.)*0.5
 		Sx = const*Utils.sdiag(mesh.vol*r[:,0]/r_abs**3)
 		Sy = const*Utils.sdiag(mesh.vol*r[:,1]/r_abs**3)
 		Sz = const*Utils.sdiag(mesh.vol*r[:,2]/r_abs**3)
-		
+
 		# G_temp = sp.vstack((sp.hstack(( o.T,     e.T*Sz, -e.T*Sy)), \
 		# 	                    sp.hstack((-e.T*Sz,  o.T,     e.T*Sx)), \
-		# 	                    sp.hstack((-e.T*Sy,  e.T*Sx,  o.T   ))))		
+		# 	                    sp.hstack((-e.T*Sy,  e.T*Sx,  o.T   ))))
 		if component == 'x':
 			G_temp = np.hstack(( o.T,     e.T*Sz, -e.T*Sy))
 		elif component == 'y':
@@ -66,7 +66,7 @@ def CondSphereAnalFunJ(x, y, z, R, x0, y0, z0, sig1, sig2, E0, flag):
 
     """
     if (~np.size(x)==np.size(y)==np.size(z)):
-        print "Specify same size of x, y, z"
+        print ("Specify same size of x, y, z")
         return
     dim = x.shape
     x = Utils.mkvc(x-x0)
@@ -118,7 +118,7 @@ def CondSphereAnalFunB(x, y, z, R, x0, y0, z0, sig1, sig2, E0, flag):
 	"""
 
 	if (~np.size(x)==np.size(y)==np.size(z)):
-		print "Specify same size of x, y, z"
+		print ("Specify same size of x, y, z")
 		return
 	dim = x.shape
 	x = Utils.mkvc(x-x0)
@@ -136,7 +136,7 @@ def CondSphereAnalFunB(x, y, z, R, x0, y0, z0, sig1, sig2, E0, flag):
 	rf2 = 3*sig1/(sig2+2*sig1)
 	Hpy = -sig1*E0/2*z
 	Hpz =  sig1*E0/2*y
-	if (flag == 'total'):	
+	if (flag == 'total'):
 		Hy[ind] = -3/2*sig2*E0*(rf2)*z[ind]
 		Hz[ind] =  3/2*sig2*E0*(rf2)*y[ind]
 	elif (flag == 'secondary'):
@@ -148,9 +148,9 @@ def CondSphereAnalFunB(x, y, z, R, x0, y0, z0, sig1, sig2, E0, flag):
 
 	if (flag == 'total'):
 		Hy[~ind] = sig1*(E0/r[~ind]**3*(R**3)*rf1*(-z[~ind]))+Hpy
-		Hz[~ind] = sig1*(E0/r[~ind]**3*(R**3)*rf1*( y[~ind]))+Hpz        
+		Hz[~ind] = sig1*(E0/r[~ind]**3*(R**3)*rf1*( y[~ind]))+Hpz
 	elif (flag == 'secondary'):
 		Hy[~ind] = sig1*(E0/r[~ind]**3*(R**3)*rf1*(-z[~ind]))
-		Hz[~ind] = sig1*(E0/r[~ind]**3*(R**3)*rf1*( y[~ind]))        
+		Hz[~ind] = sig1*(E0/r[~ind]**3*(R**3)*rf1*( y[~ind]))
 
 	return np.reshape(mu_0*Hx, x.shape, order='F'), np.reshape(mu_0*Hy, x.shape, order='F'), np.reshape(mu_0*Hz, x.shape, order='F')

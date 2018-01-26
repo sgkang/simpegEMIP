@@ -35,4 +35,4 @@ def hzAnalyticCentLoopF_CC(a, f, func = ColeColePelton, sigmaInf=None, eta=0.1, 
     return hz
 
 if __name__ == '__main__':
-	print 'kang'
+	print ('kang')
