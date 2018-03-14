@@ -9,4 +9,3 @@ from . import Base
 from . import DebyeDec
 from . import StretchedExponential
 from . import StoltzMacnae
-from . import Utils
