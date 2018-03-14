@@ -6,8 +6,7 @@ import scipy.sparse as sp
 from simpegEMIP.StretchedExponential import SEInvImpulseProblem, SESurvey
 import matplotlib.pyplot as plt
 from pymatsolver import PardisoSolver
-from simpegem1d import DigFilter
-import matplotlib 
+import matplotlib
 from simpegEMIP.TDEM import Problem3D_e, BaseTDEMIPProblem
 from simpegEMIP.Base import BaseEMIPProblem
 matplotlib.rcParams["font.size"] = 14
@@ -16,7 +15,7 @@ matplotlib.rcParams["font.size"] = 14
 cs, ncx, ncz, npad = 10., 25, 20, 18
 hx = [(cs,ncx), (cs,npad,1.3)]
 hz = [(cs,npad,-1.3), (cs,ncz), (cs,npad,1.3)]
-mesh = Mesh.CylMesh([hx,1,hz], '00C')    
+mesh = Mesh.CylMesh([hx,1,hz], '00C')
 sigmaInf = np.ones(mesh.nC) * 0.001
 airind = mesh.gridCC[:,2]>0.
 layerind = (np.logical_and(mesh.gridCC[:,2]<-50, mesh.gridCC[:,2]>-100.)) & (mesh.gridCC[:,0]<100.)
@@ -34,10 +33,12 @@ srcloc = np.array([[0., 0., 30.]])
 rx = EM.TDEM.Rx.Point_dbdt(rxloc, np.logspace(np.log10(2e-5), np.log10(0.009), 51), 'z')
 src = EM.TDEM.Src.CircularLoop([rx], waveform=EM.TDEM.Src.StepOffWaveform(), loc=srcloc)
 survey = EM.TDEM.Survey([src])
-prb_emip = Problem3D_e(mesh, sigmaInf=sigmaInf, eta=eta, tau=tau, c=c)
-# prb_emip.verbose = True
-prb_emip.timeSteps = [(1e-06, 5), (2.5e-06, 5), (5e-06, 5), (1e-05, 10), (2e-05, 10), (4e-05, 10), (8e-05, 10)]
-prb_emip.Solver = PardisoSolver
-prb_emip.pair(survey)
-F = prb_emip.fields([])
+prb_em = EM.TDEM.Problem3D_e(mesh, sigmaMap=Maps.IdentityMap(mesh))
+# prb_em.verbose = True
+prb_em.timeSteps = [(1e-06, 5), (2.5e-06, 5), (5e-06, 5), (1e-05, 10), (2e-05, 10), (4e-05, 10), (8e-05, 10), (1.6e-04, 10), (3.2e-04, 20)]
+prb_em.Solver = PardisoSolver
+prb_em.pair(survey)
+F = prb_em.fields(sigmaInf)
+prb_em.Jvec(sigmaInf, sigmaInf, f=F)
+prb_em.Jtvec(sigmaInf, np.ones(survey.nD), f=F)
 # data = survey.dpred([], f=F)

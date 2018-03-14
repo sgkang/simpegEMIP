@@ -1,6 +1,15 @@
 from __future__ import division
 import numpy as np
 from SimPEG import Utils
+from scipy.sparse import coo_matrix
+
+
+def sdiag(h):
+    """Sparse diagonal matrix"""
+    # return sp.spdiags(mkvc(h), 0, h.size, h.size, format="csr")
+    N = h.size
+    row = np.arange(N, dtype='intc')
+    return coo_matrix((Utils.mkvc(h), (row, row)), shape=(N, N)).tocsr()
 
 
 def getJpol(
@@ -19,17 +28,15 @@ def getJpol(
     dt = timeSteps[tInd]
     # Handling when jpol at t = 0
     if tInd < 0:
-        jpol = MeDsigOff_0.flatten()*E[:, :, 0]
+        jpol = sdiag(MeDsigOff_0)*E[:, :, 0]
         return jpol
-    print (E[:, :, tInd].shape)
-    print (MeK.shape)
-    jpol = MeK.flatten()*E[:, :, tInd]
+    jpol = sdiag(MeK)*E[:, :, tInd]
 
     for k in range(1, tInd):
         dt = timeSteps[k]
-        jpol += (dt/2)*MeCnk[:, k].flatten() * E[:, :, k]
-        jpol += (dt/2)*MeCnk[:, k+1].flatten() * E[:, :, k+1]
+        jpol += (dt/2)*sdiag(MeCnk[:, k]) * E[:, :, k]
+        jpol += (dt/2)*sdiag(MeCnk[:, k+1]) * E[:, :, k+1]
 
     # Handling when jpol at t < 0
-    jpol += MeDsigOff_n.flatten()*E[:, :, 0]
+    jpol += sdiag(MeDsigOff_n)*E[:, :, 0]
     return jpol

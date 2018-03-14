@@ -11,9 +11,11 @@ from simpegEMIP.TDEM.FieldsTDEMIP import Fields3D_e_Inductive
 import time
 from scipy.constants import mu_0
 import sys
-
+from profilehooks import profile
 
 # TODO: not sure this is a right way to do ...
+
+@profile
 def geteref(e, mesh, option=None, tInd=0):
     """
     geteref(e, mesh, option=None, tInd=0)
@@ -62,7 +64,7 @@ def geteref(e, mesh, option=None, tInd=0):
         raise Exception("Dimension of e should be either 1 or 2")
     return eref
 
-
+@profile
 def getwe(e, eref, mesh, ndim=1):
     """
     getwe(e, eref, mesh)
@@ -87,7 +89,7 @@ def getwe(e, eref, mesh, ndim=1):
     we_cc[we_cc < 0.] = 0.
     return we_cc
 
-
+@profile
 def get_we_eff(e, eref, J, mesh, actinds):
     # Here we assume dimension of J: [nSrc x nC]
     nSrc = e.shape[1]
@@ -217,6 +219,7 @@ class LinearIPProblem(BaseEMIPProblem, BaseTimeProblem):
 
     # This evaluates convolution, and takes most of time
     # TODO: Use cython
+
     @property
     def Peta(self):
         if getattr(self, '_Peta', None) is None:
@@ -303,6 +306,7 @@ class LinearIPProblem(BaseEMIPProblem, BaseTimeProblem):
     def fields(self, m):
         return None
 
+    @profile
     def getJ(self, f=None):
         """
             Generate Sensitivity matrix
@@ -340,6 +344,7 @@ class LinearIPProblem(BaseEMIPProblem, BaseTimeProblem):
             sys.stdout.flush()
         return -np.vstack(J)
 
+    @profile
     def forward(self, m, f=None):
 
         self.model = m

@@ -7,9 +7,17 @@ from simpegEMIP.TDEM.FieldsTDEMIP import Fields3D_e, Fields3D_phi
 from SimPEG.EM.TDEM import FieldsTDEM
 from simpegEMIP.Base import BaseEMIPProblem
 import time
-# import getJpol as pyx
-from . import getJpol_py as pyx
+from . import getJpol as pyx
+# from . import getJpol_py as pyx
 from profilehooks import profile
+from scipy.sparse import coo_matrix
+
+
+def sdiag(h):
+    """Sparse diagonal matrix"""
+    N = h.size
+    row = np.arange(N, dtype='intc')
+    return coo_matrix((h, (row, row)), shape=(N, N)).tocsr()
 
 
 class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
@@ -71,11 +79,11 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
                     print('Done')
 
             # Compute polarization urrents at current step
-            # Cythonize
             # self.jpol = self.getJpol(tInd, F)
-            MeK = self.MeK(dt).diagonal()
-            MeDsigOff_0 = self.MeDsigOff(0).diagonal()
-            MeDsigOff_n = self.MeDsigOff(tInd).diagonal()
+            # Cythonize
+            MeK = self.MeK(dt)
+            MeDsigOff_0 = self.MeDsigOff(0)
+            MeDsigOff_n = self.MeDsigOff(tInd)
             MeCnk = self.getMeCnk(tInd+1, tInd)
 
             if F[:, 'e', :].ndim == 2:
@@ -93,7 +101,9 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
                     )
 
             rhs = self.getRHS(tInd+1)  # this is on the nodes of the time mesh
+
             Asubdiag = self.getAsubdiag(tInd)
+
             if self.verbose:
                 print('    Solving...   (tInd = {:d})'.format(tInd+1))
             # taking a step
@@ -177,6 +187,7 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
         - m / ((2*self.c+1.)*self.tau ** self.c) * (dt) ** (2*self.c)
         return - self.sigmaInf * kappa
 
+
 # ------------------------------- Problem3D_e ------------------------------- #
 class Problem3D_e(BaseTDEMIPProblem):
     """
@@ -220,7 +231,7 @@ class Problem3D_e(BaseTDEMIPProblem):
 
         # Handling when jpol at t = 0
         if tInd < 0:
-            jpol = self.MeDsigOff(0)*F[:, 'e', 0]
+            jpol = sdiag(self.MeDsigOff(0))*F[:, 'e', 0]
             return jpol
 
         jpol = self.MeK(dt)*F[:, 'e', tInd]
@@ -237,27 +248,31 @@ class Problem3D_e(BaseTDEMIPProblem):
     def MeA(self, dt):
         gamma = self.getGamma(dt)
         val = self.sigmaInf + gamma
-        return self.mesh.getEdgeInnerProduct(val)
+        return self.mesh.aveE2CC.T * (self.mesh.vol*val)
+        # return self.mesh.getEdgeInnerProduct(val)
 
     def MeK(self, dt):
         kappa = self.getKappa(dt)
-        return self.mesh.getEdgeInnerProduct(kappa)
+        return self.mesh.aveE2CC.T * (self.mesh.vol*kappa)
+        # return self.mesh.getEdgeInnerProduct(kappa)
 
     def MeCnk(self, n, k):
         tn = self.times[n]
         tk = self.times[k]
         val = -self.sigmaInf * self.getpetaI(tn-tk)
-        return self.mesh.getEdgeInnerProduct(val)
+        return self.mesh.aveE2CC.T * (self.mesh.vol*val)
+        # return self.mesh.getEdgeInnerProduct(val)
 
     def getMeCnk(self, n, k):
         return np.hstack(
-            [self.MeCnk(n, i).diagonal().reshape([-1, 1]) for i in range(k+1) ]
+            [self.MeCnk(n, i).reshape([-1, 1]) for i in range(k+1) ]
             )
 
     def MeDsigOff(self, n):
         tn = self.times[n]
         val = -self.sigmaInf * self.getpetaOff(tn)
-        return self.mesh.getEdgeInnerProduct(val)
+        # return self.mesh.getEdgeInnerProduct(val)
+        return self.mesh.aveE2CC.T * (self.mesh.vol*val)
 
     def getAdiag(self, tInd):
         """
@@ -268,7 +283,7 @@ class Problem3D_e(BaseTDEMIPProblem):
         dt = self.timeSteps[tInd]
         C = self.mesh.edgeCurl
         MfMui = self.MfMui
-        return C.T * (MfMui * C) + 1./dt * self.MeA(dt)
+        return C.T * (MfMui * C) + 1./dt * sdiag(self.MeA(dt))
 
     def getAsubdiag(self, tInd):
         """
@@ -278,8 +293,7 @@ class Problem3D_e(BaseTDEMIPProblem):
 
         dt = self.timeSteps[tInd]
         dtn1 = self.timeSteps[tInd-1]
-
-        return - 1./dt * self.MeA(dtn1)
+        return - 1./dt * sdiag(self.MeA(dtn1))
 
     def getRHS(self, tInd):
         """
@@ -291,9 +305,10 @@ class Problem3D_e(BaseTDEMIPProblem):
         dt = self.timeSteps[tInd-1]
         s_m, s_e = self.getSourceTerm(tInd)
         _, s_en1 = self.getSourceTerm(tInd-1)
-
+        # return (- 1./dt * (s_e - s_en1)
+        #         + self.mesh.edgeCurl.T * self.MfMui * s_m
+        #         - 1./dt * (self.jpol-self.jpoln1))
         return (- 1./dt * (s_e - s_en1)
-                + self.mesh.edgeCurl.T * self.MfMui * s_m
                 - 1./dt * (self.jpol-self.jpoln1))
 
     def getAdc(self):
@@ -343,6 +358,7 @@ class Problem3D_e(BaseTDEMIPProblem):
         if self.Adcinv is not None:
             self.Adcinv.clean()
 
+
 class Problem3D_phi(Problem3D_e):
     """
         Solve the EB-formulation of Maxwell's equations for the electric potential, e.
@@ -381,7 +397,7 @@ class Problem3D_phi(Problem3D_e):
 
         dt = self.timeSteps[tInd]
         G = self.mesh.nodalGrad
-        A = G.T * self.MeA(dt) * G
+        A = G.T * sdiag(self.MeA(dt)) * G
         A[0, 0] = A[0, 0] + 1.
         return A
 

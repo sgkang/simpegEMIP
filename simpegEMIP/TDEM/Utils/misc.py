@@ -2,6 +2,12 @@ import numpy as np
 from scipy.interpolate import interp1d
 from SimPEG.Utils import sdiag
 
+def get_dobs_pn(dobs):
+    dobs_p = dobs.copy()
+    dobs_p[dobs<0.] = np.nan
+    dobs_n = dobs.copy()
+    dobs_n[dobs>0.] = np.nan
+    return dobs_p, -dobs_n
 
 def uniqueRows(M):
     b = np.ascontiguousarray(M).view(
