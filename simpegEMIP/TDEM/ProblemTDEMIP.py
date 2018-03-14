@@ -89,7 +89,8 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
             if F[:, 'e', :].ndim == 2:
                 n, m = F[:, 'e', :].shape
                 self.jpol = pyx.getJpol(
-                    self.timeSteps, tInd, F[:, 'e', :].reshape(n, 1, m, order="F"),
+                    self.timeSteps, tInd,
+                    F[:, 'e', :].reshape(n, 1, m, order="F"),
                     MeK, MeCnk,
                     MeDsigOff_0, MeDsigOff_n
                     )
