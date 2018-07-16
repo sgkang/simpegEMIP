@@ -36,7 +36,7 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
     def __init__(self, mesh, **kwargs):
         BaseEMIPProblem.__init__(self, mesh, **kwargs)
 
-    @profile
+    # @profile
     def fields(self, m):
         """
         Solve the forward problem for the fields.

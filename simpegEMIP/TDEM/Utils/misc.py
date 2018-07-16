@@ -2,21 +2,13 @@ import numpy as np
 from scipy.interpolate import interp1d
 from SimPEG.Utils import sdiag
 
+
 def get_dobs_pn(dobs):
     dobs_p = dobs.copy()
-    dobs_p[dobs<0.] = np.nan
+    dobs_p[dobs < 0.] = np.nan
     dobs_n = dobs.copy()
-    dobs_n[dobs>0.] = np.nan
+    dobs_n[dobs > 0.] = np.nan
     return dobs_p, -dobs_n
-
-def uniqueRows(M):
-    b = np.ascontiguousarray(M).view(
-        np.dtype((np.void, M.dtype.itemsize * M.shape[1]))
-        )
-    _, unqInd = np.unique(b, return_index=True)
-    _, invInd = np.unique(b, return_inverse=True)
-    unqM = M[unqInd]
-    return unqM, unqInd, invInd
 
 
 def transFilt(datFcn, t, tol=1e-12):
