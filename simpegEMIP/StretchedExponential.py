@@ -118,6 +118,7 @@ class SEMultiSurvey(Survey.BaseSurvey):
     def __init__(self, time, locs, **kwargs):
         self.time = time
         self.locs = np.atleast_2d(locs)
+        Utils.setKwargs(self, **kwargs)
 
     @property
     def n_time(self):
