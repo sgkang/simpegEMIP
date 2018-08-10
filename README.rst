@@ -9,8 +9,8 @@ SimPEG-EMIP
     :target: https://github.com/simpeg/simpeg/blob/master/LICENSE
     :alt: MIT license
 
-.. image:: https://api.travis-ci.org/sgkang/simpeg.svg?branch=master
-    :target: https://travis-ci.org/simpeg/simpeg
+.. image:: https://travis-ci.org/sgkang/simpegEMIP.svg?branch=master
+    :target: https://travis-ci.org/sgkang/simpegEMIP
     :alt: Travis CI build status
 
 .. image:: https://mybinder.org/badge.svg 
