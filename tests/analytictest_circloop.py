@@ -45,7 +45,7 @@ def halfSpaceProblemAnaCircLoopDiff(showIt=False, waveformType="STEPOFF"):
     out = survey.dpred(sigma)
     bz_ana = mu_0*hzAnalyticCentLoopT(13., rx.times, sig_half)
     err = np.linalg.norm(bz_ana-out)/np.linalg.norm(bz_ana)
-    print '>> Relative error = ', err
+    print ('>> Relative error = ', err)
 
     if showIt:
         plt.loglog(rx.times, bz_ana)

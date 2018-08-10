@@ -74,7 +74,7 @@ class SEInvImpulseProblem(SEInvProblem):
         return self.eta*self.c/time*((time/self.tau)**self.c)*np.exp(-(time/self.tau)**self.c)
 
     def ColeSEJImpulsefun(self, time):
-        kerneleta = lambda t, eta, tau, cjus: c/t*((t/tau)**c)*np.exp(-(t/tau)**c)
+        kerneleta = lambda t, eta, tau, c: c/t*((t/tau)**c)*np.exp(-(t/tau)**c)
         kerneltau = lambda t, eta, tau, c: -c**2 * eta * ((t/tau)**c) / (t*tau) * np.exp(-(t/tau)**c) * (-(t/tau)**c+1.)
         kernelc = lambda t, eta, tau, c: -eta/t*((t/tau)**c)*np.exp(-(t/tau)**c)*( c*((t/tau)**c)*np.log(t/tau)-c*np.log(t/tau)-1.)
 
