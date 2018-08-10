@@ -12,3 +12,6 @@ dependencies:
   - pip:
     - pymatsolver
     - git+https://github.com/sgkang/simpegemip.git@master
+    - discretize
+    - SimPEG
+

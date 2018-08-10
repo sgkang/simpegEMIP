@@ -5,6 +5,7 @@ from SimPEG import Mesh, Utils, Maps
 import unittest
 import matplotlib.pyplot as plt
 
+
 def CausalConv(array1, array2, time):
     """
         Evaluate convolution for two causal functions.
