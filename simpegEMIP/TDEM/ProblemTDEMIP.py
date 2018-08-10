@@ -9,7 +9,7 @@ from simpegEMIP.Base import BaseEMIPProblem
 import time
 from . import getJpol as pyx
 # from . import getJpol_py as pyx
-from profilehooks import profile
+# from profilehooks import profile
 from scipy.sparse import coo_matrix
 
 
