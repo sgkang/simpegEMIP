@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from __future__ import print_function
-from setuptools import setup, Extension
+from setuptools import setup, Extension, find_packages
 import numpy
 
 CLASSIFIERS = [
@@ -21,20 +21,12 @@ CLASSIFIERS = [
 
 setup(
     name="simpegEMIP",
-    version="0.0.1",
+    version="0.0.13",
+    packages=find_packages(),
     setup_requires=[
-        'numpy>=1.7',
-        'scipy>=0.13',
         'setuptools>=18.0',
         'cython',
-        'pymatsolver>=0.1.1',
-        'ipython',
-        'matplotlib',
-        'properties>=0.5.2',
-        'vectormath>=0.2.0',
-        'SimPEG',
-        'discretize>=0.2.0',
-        'geoana>=0.0.4'
+        'numpy'
     ],
     install_requires=[
         'numpy>=1.7',
@@ -48,11 +40,12 @@ setup(
         'vectormath>=0.2.0',
         'SimPEG',
         'discretize>=0.2.0',
-        'geoana>=0.0.4'
+        'geoana>=0.0.4',
+        'simpegEM1D'
     ],
     ext_modules=[
         Extension(
-            "getJpol",
+            "simpegEMIP.TDEM.getJpol",
             sources=["simpegEMIP/TDEM/getJpol.pyx"],
             include_dirs=[numpy.get_include()]
         )

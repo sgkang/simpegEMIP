@@ -34,31 +34,41 @@ def get_peta_impulse(time, eta=0.1, tau=10., c=0.5):
     peta = m*time**(c-1.)*np.exp(-(time/tau)**c)
     return peta
 
+
 def get_peta_stepoff(time, eta=0.1, tau=10., c=0.5):
     peta = eta*np.exp(-(time/tau)**c)
     return peta
+
 
 def getpeta_pulse_off(time, eta=0.1, tau=10., c=0.5, T=8.):
     peta = eta*(np.exp(-((time)/tau)**c) - np.exp(-((time+T/4.)/tau)**c))
     return peta
 
+
 def getpeta_pulse_on(time, eta=0.1, tau=10., c=0.5, T=8.):
     peta = eta*(1-np.exp(-(time/tau)**c))
     return peta
 
+
 def get_peta_off(time, n_pulse, eta=0.1, tau=10., c=0.5, T=8.):
     peta = np.zeros_like(time)
-    for i_pulse in range (n_pulse):
+    for i_pulse in range(n_pulse):
         factor = (-1)**i_pulse * (n_pulse-i_pulse)
-        peta += getpeta_pulse_off(time+T/2*i_pulse, eta=eta, tau=tau, c=c) * factor
+        peta += getpeta_pulse_off(
+            time+T/2*i_pulse, eta=eta, tau=tau, c=c
+        ) * factor
     return peta/n_pulse
+
 
 def get_peta_on(time, n_pulse, eta=0.1, tau=10., c=0.5, T=8.):
     peta = getpeta_pulse_on(time, eta=eta, tau=tau, c=c) * n_pulse
-    for i_pulse in range (1, n_pulse):
+    for i_pulse in range(1, n_pulse):
         factor = (-1)**(i_pulse) * (n_pulse-i_pulse)
-        peta += getpeta_pulse_off(time + T/4. + T/2*(i_pulse-1), eta=eta, tau=tau, c=c) * factor
+        peta += getpeta_pulse_off(
+            time + T/4. + T/2*(i_pulse-1), eta=eta, tau=tau, c=c
+        ) * factor
     return peta/n_pulse
+
 
 def generate_rectangular_waveform(dt=1e-3, n_time=int(4e3), n_pulse=2):
     time = np.arange(n_time*n_pulse) * dt + dt
@@ -68,8 +78,11 @@ def generate_rectangular_waveform(dt=1e-3, n_time=int(4e3), n_pulse=2):
     current_pulse = current_single_pulse.copy()
     if n_pulse > 1:
         for i in range(n_pulse-1):
-            current_pulse = np.r_[current_pulse, (-1)**(i-1)*current_single_pulse]
+            current_pulse = np.r_[
+                current_pulse, (-1)**(i-1)*current_single_pulse
+            ]
     return time, current_pulse
+
 
 def stack(time, data, n_pulse, T=8.):
     n_time = int(time.size/n_pulse)
@@ -82,6 +95,7 @@ def stack(time, data, n_pulse, T=8.):
         i_end += n_time
     return time[:n_time], data_stack/n_pulse
 
+
 class stretched_exponential_forward(unittest.TestCase):
 
     def setUp(self):
@@ -93,10 +107,12 @@ class stretched_exponential_forward(unittest.TestCase):
         etamap = Maps.ExpMap(nP=n_loc)*wires.eta
         cmap = Maps.ExpMap(nP=n_loc)*wires.c
         eta0, tau0, c0 = 0.1, 10., 0.5
-        m0 = np.log(np.r_[eta0*np.ones(n_loc), tau0*np.ones(n_loc), c0*np.ones(n_loc)])
+        m0 = np.log(
+            np.r_[eta0*np.ones(n_loc), tau0*np.ones(n_loc), c0*np.ones(n_loc)]
+        )
         survey = SEMultiSurvey(time=time, locs=np.zeros((n_loc, 3)))
         m1D = Mesh.TensorMesh([np.ones(int(n_loc*3))])
-        prob = SEMultiInvProblem(m1D, etaMap = etamap, tauMap = taumap, cMap=cmap)
+        prob = SEMultiInvProblem(m1D, etaMap=etamap, tauMap=taumap, cMap=cmap)
         prob.pair(survey)
 
         self.survey = survey
