@@ -10,5 +10,6 @@ dependencies:
   - ipywidgets
   - mkl
   - pip:
+    - SimPEG
     - git+https://github.com/sgkang/simpegemip.git@master
 
