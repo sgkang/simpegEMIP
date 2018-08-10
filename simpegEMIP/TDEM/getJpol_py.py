@@ -20,7 +20,7 @@ def getJpol(
     MeCnk,
     MeDsigOff_0,
     MeDsigOff_n
-    ):
+):
     """
         Computation of polarization currents
     """
