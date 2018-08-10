@@ -20,7 +20,7 @@ CLASSIFIERS = [
 ]
 
 setup(
-    name="SimPEG-EMIP",
+    name="simpegEMIP",
     version="0.0.1",
     setup_requires=[
         'numpy>=1.7',
