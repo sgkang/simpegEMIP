@@ -21,12 +21,6 @@ It is under an ecosystem of SimPEG: Simulation and Parameter Estimation in Geoph
 
 The vision is to understand induced polarization effects in various EM data, but particular focus is in time-domain inductive source EM data such as airborne EM. 
 
-* modular with respect to the spacial discretization, optimization routine, and geophysical problem
-* built with the inverse problem in mind
-* provides a framework for geophysical and hydrogeologic problems
-* supports 1D, 2D and 3D problems
-* designed for large-scale inversions
-
 Citing SimPEG-EMIP
 ------------------
 
