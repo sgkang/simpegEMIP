@@ -266,8 +266,8 @@ class Problem3D_e(BaseTDEMIPProblem):
 
     def getMeCnk(self, n, k):
         return np.hstack(
-            [self.MeCnk(n, i).reshape([-1, 1]) for i in range(k+1) ]
-            )
+            [self.MeCnk(n, i).reshape([-1, 1]) for i in range(k+1)]
+        )
 
     def MeDsigOff(self, n):
         tn = self.times[n]

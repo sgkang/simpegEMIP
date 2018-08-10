@@ -11,9 +11,8 @@ from simpegEMIP.TDEM.FieldsTDEMIP import Fields3D_e_Inductive
 import time
 from scipy.constants import mu_0
 import sys
-from profilehooks import profile
+# from profilehooks import profile
 
-# TODO: not sure this is a right way to do ...
 
 # @profile
 def geteref(e, mesh, option=None, tInd=0):
@@ -64,6 +63,7 @@ def geteref(e, mesh, option=None, tInd=0):
         raise Exception("Dimension of e should be either 1 or 2")
     return eref
 
+
 # @profile
 def getwe(e, eref, mesh, ndim=1):
     """
@@ -88,6 +88,7 @@ def getwe(e, eref, mesh, ndim=1):
     we_cc = Utils.sdiag(1./(mesh.aveE2CC*eref_eref)) * (mesh.aveE2CC*e_eref)
     we_cc[we_cc < 0.] = 0.
     return we_cc
+
 
 # @profile
 def get_we_eff(e, eref, J, mesh, actinds):

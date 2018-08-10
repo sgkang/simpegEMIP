@@ -26,6 +26,7 @@ install:
   - conda env create -f environment.yml
   - source activate simpegEMIP-environment
   - export MPLBACKEND="agg"
+  - pip install -r requirements_dev.txt
   - pip install coveralls
   - python setup.py install
 
