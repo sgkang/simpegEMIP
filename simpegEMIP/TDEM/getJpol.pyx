@@ -21,7 +21,7 @@ def getJpol(
     np.ndarray[DTYPE_float_t, ndim=2] MeCnk,
     np.ndarray[DTYPE_float_t, ndim=1] MeDsigOff_0,
     np.ndarray[DTYPE_float_t, ndim=1] MeDsigOff_n
-    ):
+):
 
     """
         Computation of polarization currents

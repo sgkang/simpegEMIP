@@ -3,6 +3,7 @@ from SimPEG import Problem, Survey, Utils, Maps
 import numpy as np
 import scipy.sparse as sp
 
+
 # TODO: deprecate this later
 class SEInvProblem(Problem.BaseProblem):
 
@@ -73,7 +74,7 @@ class SEInvImpulseProblem(SEInvProblem):
         return self.eta*self.c/time*((time/self.tau)**self.c)*np.exp(-(time/self.tau)**self.c)
 
     def ColeSEJImpulsefun(self, time):
-        kerneleta = lambda t, eta, tau, c: c/t*((t/tau)**c)*np.exp(-(t/tau)**c)
+        kerneleta = lambda t, eta, tau, cjus: c/t*((t/tau)**c)*np.exp(-(t/tau)**c)
         kerneltau = lambda t, eta, tau, c: -c**2 * eta * ((t/tau)**c) / (t*tau) * np.exp(-(t/tau)**c) * (-(t/tau)**c+1.)
         kernelc = lambda t, eta, tau, c: -eta/t*((t/tau)**c)*np.exp(-(t/tau)**c)*( c*((t/tau)**c)*np.log(t/tau)-c*np.log(t/tau)-1.)
 
@@ -134,23 +135,6 @@ class SEMultiSurvey(Survey.BaseSurvey):
 
     def dpred(self, m, f=None):
         return self.prob.fields(m)
-
-    # def setUncertainty(self, dobs, perc=0.1, floor=0., floorIP=0.):
-    #     self.uncert = np.zeros((self.n_time, self.ntx))
-    #     self.dobs = dobs
-    #     dobs = dobs.reshape((self.n_time, self.ntx), order='F')
-    #     for itx in range(self.ntx):
-    #         ipind = dobs[:, itx] < 0.
-
-    #         # Set different uncertainty for stations having negative transients
-    #         if (ipind).sum() > 3:
-    #             ip = dobs[ipind, itx]
-    #             self.uncert[:, itx] = perc*abs(dobs[:, itx]) + abs(ip).max()
-    #         else:
-    #             self.uncert[:, itx] = perc*abs(dobs[:, itx])+floor
-    #     self.uncert = Utils.mkvc(self.uncert)
-
-    #     return self.uncert
 
 
 class SEMultiInvProblem(Problem.BaseProblem):

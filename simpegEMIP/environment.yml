@@ -1,0 +1,14 @@
+name: simpegEMIP-environment
+
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - numpy
+  - scipy
+  - matplotlib
+  - ipywidgets
+  - mkl
+  - pip:
+    - pymatsolver
+    - git+https://github.com/sgkang/simpegemip.git@master
