@@ -1,8 +1,8 @@
 .. image:: https://raw.github.com/simpeg/simpeg/master/docs/images/simpeg-logo.png
     :alt: SimPEG Logo
 
-SimPEG
-======
+SimPEG-EMIP
+===========
 
 .. image:: https://img.shields.io/pypi/v/SimPEG.svg
     :target: https://pypi.python.org/pypi/SimPEG

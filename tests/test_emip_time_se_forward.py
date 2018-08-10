@@ -20,6 +20,8 @@ from pymatsolver import PardisoSolver
 from simpegEM1D import DigFilter
 from simpegEMIP.StretchedExponential import SEInvImpulseProblem, SESurvey
 from simpegEMIP.TDEM import Problem3D_e
+from simpegEMIP.TDEM import Survey as SurveyEMIP
+from simpegEMIP.TDEM import Rx as RxEMIP
 
 import matplotlib.pyplot as plt
 
@@ -55,7 +57,7 @@ class problem_e_forward(unittest.TestCase):
         src_z = 30.
         rxloc = np.array([0., 0., src_z])
         srcloc = np.array([0., 0., src_z])
-        rx = EM.TDEM.Rx.Point_dbdt(
+        rx = RxEMIP.Point_dbdt(
             rxloc, np.logspace(np.log10(1e-5), np.log10(0.009), 51), 'z'
         )
         src = EM.TDEM.Src.CircularLoop(
@@ -64,7 +66,7 @@ class problem_e_forward(unittest.TestCase):
             loc=srcloc,
             radius=13.
         )
-        survey = EM.TDEM.Survey([src])
+        survey = SurveyEMIP([src])
         prb_em = Problem3D_e(
             mesh,
             sigmaInfMap=wiresEM.sigmaInf,
@@ -181,16 +183,24 @@ class problem_e_forward(unittest.TestCase):
     def test_Problem_e_step_off(self, plotIt=False):
         data = self.survey.dpred(self.m)
         data_analytic = self.get_analytic(
-            self.sig_half, self.eta_cc, self.tau_cc, self.c_cc, self.src_z, self.time
+            self.sig_half, self.eta_cc, self.tau_cc, self.c_cc,
+            self.src_z, self.time
         )
         uncert = abs(data_analytic)*0.2 + 1e-10
-        err = np.linalg.norm((data - data_analytic)/(uncert))**2 / self.survey.nD
-        if err < 1:
+        chi_factor = np.linalg.norm(
+            (data - data_analytic)/(uncert)
+        )**2 / self.survey.nD
+
+        if chi_factor < 1:
             passed = True
-            print (("Probelm_e test is passed: chi factor %.1e") % (err))
+            print (
+                ("Probelm_e test is passed: chi factor %.1e") % (chi_factor)
+            )
         else:
             passed = False
-            print (("Probelm_e test is failed: chi factor %.1e") % (err))
+            print (
+                ("Probelm_e test is failed: chi factor %.1e") % (chi_factor)
+            )
         self.assertTrue(passed)
 
 if __name__ == '__main__':

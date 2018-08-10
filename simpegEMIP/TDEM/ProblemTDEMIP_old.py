@@ -49,16 +49,13 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
         tic = time.time()
         self.model = m
 
-        # F = self.fieldsPair(self.mesh, self.survey)
-        n_src = len(self.survey.srcList)
-        n_time = self.times.size
-        nE = self.mesh.nE
-        e = np.zeros((nE, n_src, n_time), order='F', dtype=float)
+        F = self.fieldsPair(self.mesh, self.survey)
+
         # set initial fields
-        # F[:, self._fieldType+'Solution', 0] = self.getInitialFields()
-        e[:, :, 0] = self.getInitialFields()
-        self.jpol = np.zeros(nE)
-        self.jpoln1 = self.getJpol(-1, e)
+        F[:, self._fieldType+'Solution', 0] = self.getInitialFields()
+
+        self.jpol = np.zeros((F[:, 'e', 0].shape))
+        self.jpoln1 = self.getJpol(-1, F)
 
         # timestep to solve forward
         if self.verbose:
@@ -89,26 +86,20 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
             MeDsigOff_n = self.MeDsigOff(tInd)
             MeCnk = self.getMeCnk(tInd+1, tInd)
 
-            # if F[:, 'e', :].ndim == 2:
-            #     n, m = F[:, 'e', :].shape
-            #     self.jpol = pyx.getJpol(
-            #         self.timeSteps, tInd,
-            #         F[:, 'e', :].reshape(n, 1, m, order="F"),
-            #         MeK, MeCnk,
-            #         MeDsigOff_0, MeDsigOff_n
-            #         )
-            # else:
-            #     self.jpol = pyx.getJpol(
-            #         self.timeSteps, tInd, F[:, 'e', :],
-            #         MeK, MeCnk,
-            #         MeDsigOff_0, MeDsigOff_n
-            #         )
-
-            self.jpol = pyx.getJpol(
-                self.timeSteps, tInd, e,
-                MeK, MeCnk,
-                MeDsigOff_0, MeDsigOff_n
-            )
+            if F[:, 'e', :].ndim == 2:
+                n, m = F[:, 'e', :].shape
+                self.jpol = pyx.getJpol(
+                    self.timeSteps, tInd,
+                    F[:, 'e', :].reshape(n, 1, m, order="F"),
+                    MeK, MeCnk,
+                    MeDsigOff_0, MeDsigOff_n
+                    )
+            else:
+                self.jpol = pyx.getJpol(
+                    self.timeSteps, tInd, F[:, 'e', :],
+                    MeK, MeCnk,
+                    MeDsigOff_0, MeDsigOff_n
+                    )
 
             rhs = self.getRHS(tInd+1)  # this is on the nodes of the time mesh
 
@@ -116,10 +107,9 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
 
             if self.verbose:
                 print('    Solving...   (tInd = {:d})'.format(tInd+1))
-
             # taking a step
-            # sol = Ainv * (rhs - Asubdiag * F[:, (self._fieldType + 'Solution'),tInd])
-            sol = Ainv * (rhs - Asubdiag * e[:, :, tInd])
+            sol = Ainv * (rhs - Asubdiag * F[:, (self._fieldType + 'Solution'),
+                                             tInd])
             # Store polarization currents at this step
             self.jpoln1 = self.jpol.copy()
 
@@ -128,12 +118,11 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
 
             if sol.ndim == 1:
                 sol.shape = (sol.size, 1)
-            # F[:, self._fieldType+'Solution', tInd+1] = sol
-            e[:, :, tInd+1] = sol
+            F[:, self._fieldType+'Solution', tInd+1] = sol
         if self.verbose:
             print('{}\nDone calculating fields(m)\n{}'.format('*'*50, '*'*50))
         Ainv.clean()
-        return e
+        return F
 
     def getSourceTerm(self, tInd):
         """
@@ -233,7 +222,8 @@ class Problem3D_e(BaseTDEMIPProblem):
     def __init__(self, mesh, **kwargs):
         BaseTDEMIPProblem.__init__(self, mesh, **kwargs)
 
-    def getJpol(self, tInd, e):
+    # TODO: Cythonize
+    def getJpol(self, tInd, F):
         """
             Computation of polarization currents
         """
@@ -242,18 +232,18 @@ class Problem3D_e(BaseTDEMIPProblem):
 
         # Handling when jpol at t = 0
         if tInd < 0:
-            jpol = sdiag(self.MeDsigOff(0))*e[:, :, 0]
+            jpol = sdiag(self.MeDsigOff(0))*F[:, 'e', 0]
             return jpol
 
-        jpol = self.MeK(dt)*e[:, :, tInd]
+        jpol = self.MeK(dt)*F[:, 'e', tInd]
 
         for k in range(1, tInd):
             dt = self.timeSteps[k]
-            jpol += (dt/2)*self.MeCnk(tInd+1, k)*e[:, :, k]
-            jpol += (dt/2)*self.MeCnk(tInd+1, k+1)*e[:, :, k+1]
+            jpol += (dt/2)*self.MeCnk(tInd+1, k)*F[:, 'e', k]
+            jpol += (dt/2)*self.MeCnk(tInd+1, k+1)*F[:, 'e', k+1]
 
         # Handling when jpol at t < 0
-        jpol += self.MeDsigOff(tInd+1)*e[:, :, 0]
+        jpol += self.MeDsigOff(tInd+1)*F[:, 'e', 0]
         return jpol
 
     def MeA(self, dt):

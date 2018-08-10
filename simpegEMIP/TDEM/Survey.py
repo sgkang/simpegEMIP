@@ -7,13 +7,33 @@ import numpy as np
 import SimPEG
 from SimPEG.EM.Base import BaseEMSurvey
 from SimPEG.EM.TDEM.RxTDEM import BaseRx
+# from .Rx import BaseRx
 from SimPEG.EM.TDEM.SrcTDEM import BaseTDEMSrc
+from SimPEG.EM.TDEM import Survey as BaseTDEMSurvey
 from SimPEG import Utils
 from SimPEG.Utils import Zero, closestPoints
 import uuid
 
 
-class Survey(BaseEMSurvey):
+class Survey(BaseTDEMSurvey):
+    """
+    Time domain electromagnetic survey
+    """
+
+    srcPair = BaseTDEMSrc
+    rxPair = BaseRx
+
+    def eval(self, u):
+        data = SimPEG.Survey.Data(self)
+        for i_src, src in enumerate(self.srcList):
+            for rx in src.rxList:
+                data[src, rx] = rx.eval(
+                    i_src, self.mesh, self.prob.timeMesh, u
+                )
+        return data
+
+
+class SurveyLinear(BaseEMSurvey):
     rxPair = BaseRx
     srcPair = BaseTDEMSrc
     times = None
