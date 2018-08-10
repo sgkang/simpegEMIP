@@ -1,8 +1,8 @@
 SimPEG-EMIP
 ===========
 
-.. image:: https://img.shields.io/pypi/v/SimPEG.svg
-    :target: https://pypi.python.org/pypi/simpegEMIP
+.. image:: https://badge.fury.io/py/simpegEMIP.svg
+    :target: https://badge.fury.io/py/simpegEMIP
     :alt: Latest PyPI version
 
 .. image:: https://img.shields.io/github/license/simpeg/simpeg.svg
@@ -13,13 +13,13 @@ SimPEG-EMIP
     :target: https://travis-ci.org/sgkang/simpegEMIP
     :alt: Travis CI build status
 
-.. image:: https://mybinder.org/badge.svg 
+.. image:: https://mybinder.org/badge.svg
     :target: https://mybinder.org/v2/gh/sgkang/simpegEMIP/master
 
-SimPEG-EMIP is a simulation and inversion pacakge focusing on induced polarization (IP) effects in electromagnetic (EM) data. 
+SimPEG-EMIP is a simulation and inversion pacakge focusing on induced polarization (IP) effects in electromagnetic (EM) data.
 It is under an ecosystem of SimPEG: Simulation and Parameter Estimation in Geophysics, which is a python package for simulation and gradient based parameter estimation in the context of geophysical applications.
 
-The vision is to understand induced polarization effects in various EM data, but particular focus is in time-domain inductive source EM data such as airborne EM. 
+The vision is to understand induced polarization effects in various EM data, but particular focus is in time-domain inductive source EM data such as airborne EM.
 
 Citing SimPEG-EMIP
 ------------------
