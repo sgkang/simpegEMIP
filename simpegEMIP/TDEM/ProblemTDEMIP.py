@@ -2,15 +2,16 @@ from __future__ import division, print_function
 import scipy.sparse as sp
 import numpy as np
 from SimPEG import Props, Problem, Utils, Solver as SimpegSolver
-from SimPEG.EM.TDEM.SurveyTDEM import Survey as SurveyTDEM
+# from SimPEG.EM.TDEM.SurveyTDEM import Survey as SurveyTDEM
 from simpegEMIP.TDEM.FieldsTDEMIP import Fields3D_e, Fields3D_phi
+from simpegEMIP.TDEM.Survey import Survey
 from SimPEG.EM.TDEM import FieldsTDEM
 from simpegEMIP.Base import BaseEMIPProblem
 import time
 from . import getJpol as pyx
+from scipy.sparse import coo_matrix
 # from . import getJpol_py as pyx
 # from profilehooks import profile
-from scipy.sparse import coo_matrix
 
 
 def sdiag(h):
@@ -27,7 +28,7 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
     Euler.
     """
 
-    surveyPair = SurveyTDEM  #: A SimPEG.EM.TDEM.SurveyTDEM Class
+    surveyPair = Survey      #: A simpegEMIP.TDEM.Survey Class
     fieldsPair = FieldsTDEM  #: A SimPEG.EM.TDEM.FieldsTDEM Class
 
     jpol = None
@@ -49,13 +50,11 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
         tic = time.time()
         self.model = m
 
-        # F = self.fieldsPair(self.mesh, self.survey)
         n_src = len(self.survey.srcList)
         n_time = self.times.size
         nE = self.mesh.nE
         e = np.zeros((nE, n_src, n_time), order='F', dtype=float)
         # set initial fields
-        # F[:, self._fieldType+'Solution', 0] = self.getInitialFields()
         e[:, :, 0] = self.getInitialFields()
         self.jpol = np.zeros(nE)
         self.jpoln1 = self.getJpol(-1, e)
@@ -82,27 +81,11 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
                     print('Done')
 
             # Compute polarization urrents at current step
-            # self.jpol = self.getJpol(tInd, F)
             # Cythonize
             MeK = self.MeK(dt)
             MeDsigOff_0 = self.MeDsigOff(0)
             MeDsigOff_n = self.MeDsigOff(tInd)
             MeCnk = self.getMeCnk(tInd+1, tInd)
-
-            # if F[:, 'e', :].ndim == 2:
-            #     n, m = F[:, 'e', :].shape
-            #     self.jpol = pyx.getJpol(
-            #         self.timeSteps, tInd,
-            #         F[:, 'e', :].reshape(n, 1, m, order="F"),
-            #         MeK, MeCnk,
-            #         MeDsigOff_0, MeDsigOff_n
-            #         )
-            # else:
-            #     self.jpol = pyx.getJpol(
-            #         self.timeSteps, tInd, F[:, 'e', :],
-            #         MeK, MeCnk,
-            #         MeDsigOff_0, MeDsigOff_n
-            #         )
 
             self.jpol = pyx.getJpol(
                 self.timeSteps, tInd, e,
@@ -118,7 +101,6 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
                 print('    Solving...   (tInd = {:d})'.format(tInd+1))
 
             # taking a step
-            # sol = Ainv * (rhs - Asubdiag * F[:, (self._fieldType + 'Solution'),tInd])
             sol = Ainv * (rhs - Asubdiag * e[:, :, tInd])
             # Store polarization currents at this step
             self.jpoln1 = self.jpol.copy()
@@ -128,7 +110,7 @@ class BaseTDEMIPProblem(Problem.BaseTimeProblem, BaseEMIPProblem):
 
             if sol.ndim == 1:
                 sol.shape = (sol.size, 1)
-            # F[:, self._fieldType+'Solution', tInd+1] = sol
+
             e[:, :, tInd+1] = sol
         if self.verbose:
             print('{}\nDone calculating fields(m)\n{}'.format('*'*50, '*'*50))
@@ -227,7 +209,7 @@ class Problem3D_e(BaseTDEMIPProblem):
     _fieldType = 'e'
     _formulation = 'EB'
     fieldsPair = Fields3D_e  #: A Fields3D_e
-    surveyPair = SurveyTDEM
+    surveyPair = Survey
     Adcinv = None
 
     def __init__(self, mesh, **kwargs):

@@ -6,7 +6,7 @@ from SimPEG.EM.Static.DC import FieldsDC
 from SimPEG.EM.TDEM import FieldsTDEM
 from SimPEG.Problem import BaseTimeProblem
 from simpegEMIP.Base import BaseEMIPProblem
-from simpegEMIP.TDEM.Survey import Survey
+from simpegEMIP.TDEM.Survey import SurveyLinear
 from simpegEMIP.TDEM.FieldsTDEMIP import Fields3D_e_Inductive
 import time
 from scipy.constants import mu_0
@@ -110,7 +110,7 @@ class LinearIPProblem(BaseEMIPProblem, BaseTimeProblem):
     Linnear IP Problem class
     """
 
-    surveyPair = Survey
+    surveyPair = SurveyLinear
     fieldsPair = FieldsDC
     Ainvdc = None
     f = None
@@ -234,9 +234,9 @@ class LinearIPProblem(BaseEMIPProblem, BaseTimeProblem):
                 for k in range(1, i):
                     temp += self.we[:, k-1] * self.getpetaI(self.times[i]-self.times[k-1]) * dt[k] * 0.5
                     temp += self.we[:, k] * self.getpetaI(self.times[i]-self.times[k]) * dt[k] * 0.5
-                self.Peta[:, i] = temp
-                + self.getKappa(dt[i]) * self.we[:, i-1]
-                + self.getGamma(dt[i]) * self.we[:, i]
+                self.Peta[:, i] = (
+                    temp + self.getKappa(dt[i]) * self.we[:, i-1] + self.getGamma(dt[i]) * self.we[:, i]
+                )
         return self._Peta
 
     @property
@@ -271,39 +271,6 @@ class LinearIPProblem(BaseEMIPProblem, BaseTimeProblem):
         - m / ((2*self.c+1.)*self.tau ** self.c) * (dt) ** (2*self.c)
         return - self.sigmaInf * kappa
 
-# Derivatives
-
-    # def PetaEtaDeriv(self, t, v, adjoint=False):
-    #     v = np.array(v, dtype=float)
-    #     taui_t_c = (self.taui*t)**self.c
-    #     dpetadeta = np.exp(-taui_t_c)
-    #     if adjoint:
-    #         return self.etaDeriv.T * (dpetadeta * v)
-    #     else:
-    #         return dpetadeta * (self.etaDeriv*v)
-
-    # def PetaTauiDeriv(self, t, v, adjoint=False):
-    #     v = np.array(v, dtype=float)
-    #     taui_t_c = (self.taui*t)**self.c
-    #     dpetadtaui = (
-    #         - self.c * self.eta / self.taui * taui_t_c * np.exp(-taui_t_c)
-    #         )
-    #     if adjoint:
-    #         return self.tauiDeriv.T * (dpetadtaui*v)
-    #     else:
-    #         return dpetadtaui * (self.tauiDeriv*v)
-
-    # def PetaCDeriv(self, t, v, adjoint=False):
-    #     v = np.array(v, dtype=float)
-    #     taui_t_c = (self.taui*t)**self.c
-    #     dpetadc = (
-    #         -self.eta * (taui_t_c)*np.exp(-taui_t_c) * np.log(self.taui*t)
-    #         )
-    #     if adjoint:
-    #         return self.cDeriv.T * (dpetadc*v)
-    #     else:
-    #         return dpetadc * (self.cDeriv*v)
-
     def fields(self, m):
         return None
 
@@ -331,16 +298,16 @@ class LinearIPProblem(BaseEMIPProblem, BaseTimeProblem):
                 if self.galvanicterm:
                     rhs = (
                         Grad.T*self.MeSigmaInf*self.MeI*self.mesh.aveE2CCV.T*G_temp.T
-                        )
+                    )
                     x = self.Ainvdc*rhs
                     J.append(
                         - Utils.mkvc(G_temp*self.mesh.aveE2CCV*self.MeI*S_temp)
                         + Utils.mkvc((S_temp.T*self.mesh.nodalGrad*x).T)
-                        )
+                    )
                 else:
                     J.append(
                         Utils.mkvc(- G_temp*self.mesh.aveE2CCV*self.MeI*S_temp)
-                        )
+                    )
             sys.stdout.write(("\r %d / %d") % (isrc+1, self.survey.nSrc))
             sys.stdout.flush()
         return -np.vstack(J)
@@ -454,7 +421,7 @@ class LinearIPProblem(BaseEMIPProblem, BaseTimeProblem):
 
 
 # ------------------------------- Problem3D_e ------------------------------- #
-class Problem3D_Inductive(LinearIPProblem):
+class Problem3DIP_Linear(LinearIPProblem,):
     """
         Solve the EB-formulation of Maxwell's equations for the electric field, e.
 
@@ -537,7 +504,7 @@ class Problem3D_Inductive(LinearIPProblem):
             self.Adcinv.clean()
 
 
-class Problem3D_Inductive_singletime(Problem3D_Inductive):
+class Problem3DIP_Linear_singletime(Problem3DIP_Linear):
     peta, petaMap, petaDeriv = Props.Invertible(
         "Peudo-chargeability"
     )

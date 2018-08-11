@@ -6,8 +6,8 @@ from __future__ import unicode_literals
 import numpy as np
 import SimPEG
 from SimPEG.EM.Base import BaseEMSurvey
-from SimPEG.EM.TDEM.RxTDEM import BaseRx
-# from .Rx import BaseRx
+from SimPEG.EM.TDEM.RxTDEM import BaseRx as BaseRxTDEM
+from .Rx import BaseRx
 from SimPEG.EM.TDEM.SrcTDEM import BaseTDEMSrc
 from SimPEG.EM.TDEM import Survey as BaseTDEMSurvey
 from SimPEG import Utils
@@ -34,8 +34,8 @@ class Survey(BaseTDEMSurvey):
 
 
 class SurveyLinear(BaseEMSurvey):
-    rxPair = BaseRx
     srcPair = BaseTDEMSrc
+    rxPair = BaseRxTDEM
     times = None
 
     def __init__(self, srcList, **kwargs):
