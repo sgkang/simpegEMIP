@@ -1,4 +1,3 @@
-from . import Linarg
 import numpy as np
 from SimPEG import Utils
 
@@ -23,8 +22,6 @@ def ComputeDepthWeight(mesh, active, alpha=1.5, topoflag=True, z0=0.):
         Zmax = ones(mesh.nC)*z0
     else:
         raise Exception("topoflag should be either True or False!!")
-
-    # dweight_act = Linarg.linearmap(abs(1/(mesh.gridCC[active, 2]-Zmax[active]))**alpha, 1e-2, 1, flag='linear')
 
     dweight_act = abs(1/(mesh.gridCC[active, 2]-Zmax[active]))**alpha
     dweight_act /= dweight_act.max()
