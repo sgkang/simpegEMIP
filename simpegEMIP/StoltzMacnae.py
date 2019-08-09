@@ -1,7 +1,7 @@
 import numpy as np
+import scipy.sparse as sp
 from SimPEG import Survey, Problem, Mesh, Utils
 from SimPEG.regularization import BaseRegularization
-import scipy.sparse as sp
 from simpegEM1D.Waveforms import piecewise_pulse_fast
 import properties
 
