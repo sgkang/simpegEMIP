@@ -41,7 +41,7 @@ setup(
         'SimPEG',
         'discretize>=0.2.0',
         'geoana>=0.0.4',
-        'simpegEM1D'
+        'simpegEM1D>=0.0.18'
     ],
     ext_modules=[
         Extension(
