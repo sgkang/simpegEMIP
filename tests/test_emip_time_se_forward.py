@@ -7,7 +7,7 @@ from SimPEG import Mesh
 from SimPEG import Utils
 from SimPEG import Maps
 from SimPEG import DataMisfit
-from SimPEG import Regularization
+from SimPEG import regularization
 from SimPEG import Optimization
 from SimPEG import Inversion
 from SimPEG import InvProblem
@@ -128,7 +128,7 @@ class problem_e_forward(unittest.TestCase):
         perc = 0.05
         dmisfitpeta = DataMisfit.l2_DataMisfit(survey)
         dmisfitpeta.W = 1/(abs(survey.dobs)*perc)
-        reg = Regularization.Simple(m1D)
+        reg = regularization.Simple(m1D)
         opt = Optimization.ProjectedGNCG(maxIter=10)
         invProb = InvProblem.BaseInvProblem(dmisfitpeta, reg, opt)
         # Create an inversion object

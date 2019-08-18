@@ -4,7 +4,7 @@ from SimPEG import Mesh
 from SimPEG import Utils
 from SimPEG import Maps
 from SimPEG import DataMisfit
-from SimPEG import Regularization
+from SimPEG import regularization
 from SimPEG import Optimization
 from SimPEG import Inversion
 from SimPEG import InvProblem
@@ -35,7 +35,7 @@ class stretched_exponential_derivatives(unittest.TestCase):
 
         # Now set up the problem to do some minimization
         dmis = DataMisfit.l2_DataMisfit(survey)
-        reg = Regularization.Tikhonov(mesh)
+        reg = regularization.Tikhonov(mesh)
         opt = Optimization.InexactGaussNewton(
             maxIterLS=20, maxIter=10, tolF=1e-6,
             tolX=1e-6, tolG=1e-6, maxIterCG=6
