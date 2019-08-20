@@ -42,7 +42,7 @@ class BaseRx(SimPEG.Survey.BaseTimeRx):
                 This is not stored in memory, but is created on demand.
         """
         if not "Pt" in self._Ps:
-            self._Ps['Pt'] = timeMesh.getInterpolationMat(self.times, 'N')
+            self._Ps['Pt'] = timeMesh.getInterpolationMat(self.times, 'CC')
         return self._Ps['Pt']
 
     def eval(self, i_src, mesh, timeMesh, e):
@@ -56,7 +56,7 @@ class BaseRx(SimPEG.Survey.BaseTimeRx):
         :return: fields projected to recievers
         """
 
-        dbdt = -mesh.edgeCurl * e[:, i_src, :]
+        dbdt = -mesh.edgeCurl * e[:, i_src, 1:]
         Pt = self.getTimeP(timeMesh)
         Ps = self.getSpatialP(mesh)
         return Utils.mkvc((Ps*dbdt) * Pt.T)
