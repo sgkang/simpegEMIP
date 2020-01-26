@@ -211,9 +211,14 @@ class Problem3D_e(BaseTDEMIPProblem):
     fieldsPair = Fields3D_e  #: A Fields3D_e
     surveyPair = Survey
     Adcinv = None
+    factor = None
 
     def __init__(self, mesh, **kwargs):
         BaseTDEMIPProblem.__init__(self, mesh, **kwargs)
+        if self.mesh._meshType is 'CYL':
+            self.factor = 1.
+        else:
+            self.factor = 3.
 
     def getJpol(self, tInd, e):
         """
@@ -241,19 +246,19 @@ class Problem3D_e(BaseTDEMIPProblem):
     def MeA(self, dt):
         gamma = self.getGamma(dt)
         val = self.sigmaInf + gamma
-        return self.mesh.aveE2CC.T * (self.mesh.vol*val)
+        return self.mesh.aveE2CC.T * (self.mesh.vol*val) * self.factor
         # return self.mesh.getEdgeInnerProduct(val)
 
     def MeK(self, dt):
         kappa = self.getKappa(dt)
-        return self.mesh.aveE2CC.T * (self.mesh.vol*kappa)
+        return self.mesh.aveE2CC.T * (self.mesh.vol*kappa) * self.factor
         # return self.mesh.getEdgeInnerProduct(kappa)
 
     def MeCnk(self, n, k):
         tn = self.times[n]
         tk = self.times[k]
         val = -self.sigmaInf * self.getpetaI(tn-tk)
-        return self.mesh.aveE2CC.T * (self.mesh.vol*val)
+        return self.mesh.aveE2CC.T * (self.mesh.vol*val) * self.factor
         # return self.mesh.getEdgeInnerProduct(val)
 
     def getMeCnk(self, n, k):
@@ -265,7 +270,7 @@ class Problem3D_e(BaseTDEMIPProblem):
         tn = self.times[n]
         val = -self.sigmaInf * self.getpetaOff(tn)
         # return self.mesh.getEdgeInnerProduct(val)
-        return self.mesh.aveE2CC.T * (self.mesh.vol*val)
+        return self.mesh.aveE2CC.T * (self.mesh.vol*val) * self.factor
 
     def getAdiag(self, tInd):
         """
@@ -301,6 +306,11 @@ class Problem3D_e(BaseTDEMIPProblem):
         # return (- 1./dt * (s_e - s_en1)
         #         + self.mesh.edgeCurl.T * self.MfMui * s_m
         #         - 1./dt * (self.jpol-self.jpoln1))
+        a = np.linalg.norm(s_e)
+        b = np.linalg.norm(s_en1)
+        c = np.linalg.norm(self.jpol)
+        d = np.linalg.norm(self.jpoln1)
+
         return (- 1./dt * (s_e - s_en1)
                 - 1./dt * (self.jpol-self.jpoln1))
 
@@ -326,7 +336,7 @@ class Problem3D_e(BaseTDEMIPProblem):
 
         for i, src in enumerate(Srcs):
             # Check if the source is grounded
-            if src.srcType == "Galvanic" and src.waveform.hasInitialFields:
+            if src.srcType == "galvanic" and src.waveform.hasInitialFields:
                 # Check self.Adcinv and clean
                 if self.Adcinv is not None:
                     self.Adcinv.clean()
@@ -424,7 +434,7 @@ class Problem3D_phi(Problem3D_e):
 
         for i, src in enumerate(Srcs):
             # Check if the source is grounded
-            if src.srcType == "Galvanic" and src.waveform.hasInitialFields:
+            if src.srcType == "galvanic" and src.waveform.hasInitialFields:
                 # Check self.Adcinv and clean
                 if self.Adcinv is not None:
                     self.Adcinv.clean()

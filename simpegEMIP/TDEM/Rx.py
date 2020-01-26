@@ -21,17 +21,19 @@ class BaseRx(SimPEG.Survey.BaseTimeRx):
         self.projComp = orientation
         SimPEG.Survey.BaseTimeRx.__init__(self, locs, times, rxType=None)
 
-    def getSpatialP(self, mesh):
-        """
-            Returns the spatial projection matrix.
 
-            .. note::
+class Point_dbdt(BaseRx):
+    """
+    dbdt TDEM receiver
 
-                This is not stored in memory, but is created on demand.
-        """
-        if not "Ps" in self._Ps:
-            self._Ps['Ps'] = mesh.getInterpolationMat(self.locs, 'Fz')
-        return self._Ps['Ps']
+    :param numpy.ndarray locs: receiver locations (ie. :code:`np.r_[x,y,z]`)
+    :param numpy.ndarray times: times
+    :param string orientation: receiver orientation 'x', 'y' or 'z'
+    """
+
+    def __init__(self, locs, times, orientation=None):
+        self.projField = 'dbdt'
+        super(Point_dbdt, self).__init__(locs, times, orientation)
 
     def getTimeP(self, timeMesh):
         """
@@ -44,6 +46,18 @@ class BaseRx(SimPEG.Survey.BaseTimeRx):
         if not "Pt" in self._Ps:
             self._Ps['Pt'] = timeMesh.getInterpolationMat(self.times, 'CC')
         return self._Ps['Pt']
+
+    def getSpatialP(self, mesh):
+        """
+            Returns the spatial projection matrix.
+
+            .. note::
+
+                This is not stored in memory, but is created on demand.
+        """
+        if not "Ps" in self._Ps:
+            self._Ps['Ps'] = mesh.getInterpolationMat(self.locs, 'F'+self.projComp)
+        return self._Ps['Ps']
 
     def eval(self, i_src, mesh, timeMesh, e):
         """
@@ -62,7 +76,7 @@ class BaseRx(SimPEG.Survey.BaseTimeRx):
         return Utils.mkvc((Ps*dbdt) * Pt.T)
 
 
-class Point_dbdt(BaseRx):
+class Point_e(BaseRx):
     """
     dbdt TDEM receiver
 
@@ -72,5 +86,46 @@ class Point_dbdt(BaseRx):
     """
 
     def __init__(self, locs, times, orientation=None):
-        self.projField = 'dbdt'
-        super(Point_dbdt, self).__init__(locs, times, orientation)
+        self.projField = 'e'
+        super(Point_e, self).__init__(locs, times, orientation)
+
+    def getTimeP(self, timeMesh):
+        """
+            Returns the time projection matrix.
+
+            .. note::
+
+                This is not stored in memory, but is created on demand.
+        """
+        if not "Pt" in self._Ps:
+            self._Ps['Pt'] = timeMesh.getInterpolationMat(self.times, 'N')
+        return self._Ps['Pt']
+
+    def getSpatialP(self, mesh):
+        """
+            Returns the spatial projection matrix.
+
+            .. note::
+
+                This is not stored in memory, but is created on demand.
+        """
+        if not "Ps" in self._Ps:
+            self._Ps['Ps'] = mesh.getInterpolationMat(self.locs, 'E'+self.projComp)
+        return self._Ps['Ps']
+
+    def eval(self, i_src, mesh, timeMesh, e):
+        """
+        Project fields to receivers to get data.
+
+        :param SimPEG.EM.TDEM.SrcTDEM.BaseSrc src: TDEM source
+        :param BaseMesh mesh: mesh used
+        :param Fields f: fields object
+        :rtype: numpy.ndarray
+        :return: fields projected to recievers
+        """
+
+        Pt = self.getTimeP(timeMesh)
+        Ps = self.getSpatialP(mesh)
+        return Utils.mkvc((Ps*e[:, i_src, :]) * Pt.T)
+
+

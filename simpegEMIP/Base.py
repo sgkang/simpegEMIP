@@ -121,14 +121,5 @@ class BaseEMIPProblem(BaseEMProblem):
             self._MeSigma0 = self.mesh.getEdgeInnerProduct(self.sigmaInf*(1.-self.eta))
         return self._MeSigma0
 
-    @property
-    def MeSigma0(self):
-        """
-        Edge inner product matrix for \\(\\sigma0\\).
-        Used in the E-B formulation
-        """
-        if getattr(self, '_MeSigma0', None) is None:
-            self._MeSigma0 = self.mesh.getEdgeInnerProduct(self.sigmaInf*(1.-self.eta))    
-
 if __name__ == '__main__':
     pass
