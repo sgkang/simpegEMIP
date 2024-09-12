@@ -1,14 +1,31 @@
-name: simpegEMIP-environment
-
+name: simpegEMIP
 channels:
   - conda-forge
-  - defaults
 dependencies:
-  - numpy
-  - scipy
+  - python==3.7.*
+  # Scientific stack
+  - numpy==1.15.*
+  - scipy==1.4.*
   - matplotlib
+  # Build
+  - pip
+  - setuptools
+  - cython==0.29.20
+  - mkl==2019
+  # Simpeg packages
+  - vectormath
+  - SimPEG==0.12.*
+  - discretize
+  - geoana
+  - pymatsolver
+  - properties
+  - empymod<2.0.0 # dependency of simpegEM1D
+  # Jupyter and ipywidgets
   - ipywidgets
-  - mkl
+  - ipython
+  - notebook
+  - webcolors==1.11.1 # pinned version is compatible with python3.7
+  - jupyter
   - pip:
+    - simpegEM1D==0.0.18a0
     - git+https://github.com/sgkang/simpegemip.git@master
-
