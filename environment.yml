@@ -1,14 +1,31 @@
-name: simpegEMIP-environment
-
+name: simpegEMIP
 channels:
   - conda-forge
-  - defaults
 dependencies:
-  - numpy
-  - scipy
+  - python==3.7.* # Assumed from meta infromation of notebook.
+  # Scientific stack
+  - numpy==1.15.*
+  - scipy==1.4.*
   - matplotlib
+  # Build
+  - pip
+  - setuptools
+  - cython==0.29.20
+  - mkl==2019 # 2020 had an error which Pardiso access invalid memory address.   
+  # Simpeg packages
+  - vectormath
+  - SimPEG==0.12.* # Assumed from the date the last simpegEMIP was updated.
+  - discretize
+  - geoana
+  - pymatsolver
+  - properties
+  - empymod<2.0.0 # dependency of simpegEM1D
+  # Jupyter and ipywidgets
   - ipywidgets
-  - mkl
+  - ipython
+  - notebook
+  - webcolors==1.11.1 # pinned version is compatible with python3.7
+  - jupyter
   - pip:
+    - simpegEM1D==0.0.18a0
     - git+https://github.com/sgkang/simpegemip.git@master
-
